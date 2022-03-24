@@ -7,7 +7,7 @@
 _Set config.js_
 
 ```
-   Copy config.backup.js as maker.ts
+   Copy config.backup.js as config.js
    Replace the [Your Key] part with your key
    Replace yourAddress value
    Replace privateKey value
