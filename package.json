@@ -1,0 +1,28 @@
+{
+  "name": "makernode",
+  "version": "1.0.0",
+  "description": "makernode",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "keywords": [
+    "maker"
+  ],
+  "dependencies": {
+    "@alch/alchemy-web3": "^1.1.7",
+    "axios": "^0.21.1",
+    "bignumber.js": "^9.0.1",
+    "dotenv": "^10.0.0",
+    "ethereumjs-tx": "^2.1.2",
+    "ethers": "^5.4.7",
+    "express": "^4.17.1",
+    "mysql2": "^2.3.0",
+    "silly-datetime": "^0.1.2",
+    "web3": "^1.0.0",
+    "zksync": "^0.11.5"
+  },
+  "author": "orbiter",
+  "license": "ISC"
+}
