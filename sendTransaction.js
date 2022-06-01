@@ -1,139 +1,157 @@
-var config = require('./config')
+var config = require("./config");
 
-WALLET_ADDRESS = config.makerAddress
-WALLET_PRIVATE_KEY = config.privatekey
+WALLET_ADDRESS = config.makerAddress;
+WALLET_PRIVATE_KEY = config.privatekey;
 
 // const ethers = require('ethers')
-const Web3 = require('web3')
-const axios = require('axios')
-const { SendQueue } = require('./send_queue')
-const EthereumTx = require('ethereumjs-tx').Transaction
-const Common = require('ethereumjs-common').default
+const Web3 = require("web3");
+const axios = require("axios");
+const { SendQueue } = require("./send_queue");
+const { utils } = require("ethers");
+const EthereumTx = require("ethereumjs-tx").Transaction;
+const Common = require("ethereumjs-common").default;
 
-let nonceDic = {}
+/**
+ * Generate fork's key
+ * @param chainId
+ * @param hashOnion
+ * @param index
+ * @returns
+ */
+function generateForkKey(chainId, hashOnion, index = 0) {
+  return utils.keccak256(
+    utils.defaultAbiCoder.encode(
+      ["uint256", "bytes32", "uint8"],
+      [chainId, hashOnion, index]
+    )
+  );
+}
+
+let nonceDic = {};
 
 // SendQueue
 
-const sendQueue = new SendQueue()
+const sendQueue = new SendQueue();
 
 // gasprice
 const getCurrentGasPrices = async (chain) => {
   try {
     let response = await axios.post(config[chain].httpEndPoint, {
-      jsonrpc: '2.0',
-      method: 'eth_gasPrice',
+      jsonrpc: "2.0",
+      method: "eth_gasPrice",
       params: [],
       id: 0,
-    })
-    if (response.status === 200 && response.statusText === 'OK') {
-      console.log('gasPrice =', response.data.result)
-      return response.data.result
+    });
+    if (response.status === 200 && response.statusText === "OK") {
+      console.log("gasPrice =", response.data.result);
+      return response.data.result;
     }
     return web3.utils.toHex(
-      web3.utils.toWei(config[chain].gasPrice.toString(), 'gwei'),
-    )
+      web3.utils.toWei(config[chain].gasPrice.toString(), "gwei")
+    );
   } catch (error) {
     return web3.utils.toHex(
-      web3.utils.toWei(config[chain].gasPrice.toString(), 'gwei'),
-    )
+      web3.utils.toWei(config[chain].gasPrice.toString(), "gwei")
+    );
   }
-}
+};
 
 async function becomeCommit(chain) {
-  const web3Net = config[chain].httpEndPoint
-  const web3 = new Web3(web3Net)
-  web3.eth.defaultAccount = WALLET_ADDRESS
+  const web3Net = config[chain].httpEndPoint;
+  const web3 = new Web3(web3Net);
+  web3.eth.defaultAccount = WALLET_ADDRESS;
 
   const destContract = new web3.eth.Contract(
     config.destABI,
     config.destDic[chain],
     (error, result) => {
-      if (error) console.log(error)
-    },
-  )
+      if (error) console.log(error);
+    }
+  );
   console.log(
-    'address =',
+    "address =",
     WALLET_ADDRESS,
-    'contractAddress =',
-    config.destDic[chain],
-  )
+    "contractAddress =",
+    config.destDic[chain]
+  );
 
-  const result = await destContract.methods
-    .commiterDeposit(WALLET_ADDRESS)
-    .call({ from: WALLET_ADDRESS })
-  console.log(result)
+  // const result = await destContract.methods
+  //   .commiterDeposit(WALLET_ADDRESS)
+  //   .call({ from: WALLET_ADDRESS });
+  // console.log(result);
+  const result = false;
   if (!result) {
     let nonce = await web3.eth.getTransactionCount(
       web3.eth.defaultAccount,
-      'pending',
-    )
-    let sql_nonce = nonceDic[chain]
-    let result_nonce = 0
+      "pending"
+    );
+    let sql_nonce = nonceDic[chain];
+    let result_nonce = 0;
     if (!sql_nonce) {
-      result_nonce = nonce
+      result_nonce = nonce;
     } else {
       if (nonce > sql_nonce) {
-        result_nonce = nonce
+        result_nonce = nonce;
       } else {
-        result_nonce = sql_nonce + 1
+        result_nonce = sql_nonce + 1;
       }
     }
-    nonceDic[chain] = result_nonce
-    console.log('nonce =', nonce)
-    console.log('sql_nonce =', sql_nonce)
-    console.log('result_nonde =', result_nonce)
+    nonceDic[chain] = result_nonce;
+    console.log("nonce =", nonce);
+    console.log("sql_nonce =", sql_nonce);
+    console.log("result_nonde =", result_nonce);
 
     /**
      * Fetch the current transaction gas prices from https://ethgasstation.info/
      */
-    let gasPrices = await getCurrentGasPrices(chain)
+    let gasPrices = await getCurrentGasPrices(chain);
 
-    let gasLimit = 1000000
+    let gasLimit = 1000000;
 
     /**
      * Build a new transaction object and sign it locally.
      */
-    let destDetails = {}
+    let destDetails = {};
 
     destDetails = {
       to: config.destDic[chain],
-      value: '0x0',
+      value: "0x0",
       data: destContract.methods.becomeCommiter().encodeABI(),
       gas: web3.utils.toHex(gasLimit),
       gasPrice: gasPrices, // converts the gwei price to wei
       nonce: result_nonce,
       chainId: config[chain].chainID,
-    }
-    let result_chain = config[chain].chainID
-    let useCommon = false
-    let transaction
+    };
+    let result_chain = config[chain].chainID;
+    let useCommon = false;
+    let transaction;
     if (chain === 22 || chain == 77) {
-      useCommon = true
+      useCommon = true;
     }
     if (useCommon) {
       const customCommon = Common.forCustomChain(
-        'mainnet',
+        "mainnet",
         {
-          name: 'toChain',
+          name: "toChain",
           networkId: result_chain,
           chainId: result_chain,
         },
-        'petersburg',
-      )
-      transaction = new EthereumTx(destDetails, { common: customCommon })
+        "petersburg"
+      );
+      transaction = new EthereumTx(destDetails, { common: customCommon });
     } else {
-      transaction = new EthereumTx(destDetails, { chain: result_chain })
+      transaction = new EthereumTx(destDetails, { chain: result_chain });
     }
     /**
      * This is where the transaction is authorized on your behalf.
      * The private key is what unlocks your wallet.
      */
-    transaction.sign(Buffer.from(WALLET_PRIVATE_KEY, 'hex'))
+    transaction.sign(Buffer.from(WALLET_PRIVATE_KEY, "hex"));
 
     /**
      * Now, we'll compress the transaction info down into a transportable object.
      */
-    const serializedTransaction = transaction.serialize()
+    const serializedTransaction = transaction.serialize();
 
     /**
      * Note that the Web3 library is able to automatically determine the "from" address based on your private key.
@@ -146,134 +164,146 @@ async function becomeCommit(chain) {
 
     return new Promise((resolve, reject) => {
       web3.eth
-        .sendSignedTransaction('0x' + serializedTransaction.toString('hex'))
-        .on('transactionHash', (hash) => {
-          resolve(hash)
-          console.log('commit_transactionHash =', hash)
+        .sendSignedTransaction("0x" + serializedTransaction.toString("hex"))
+        .on("transactionHash", (hash) => {
+          resolve(hash);
+          console.log("commit_transactionHash =", hash);
           // destContract
         })
-        .on('error', (err) => {
-          reject(err)
-          console.log('commitError =', err)
-        })
-    })
+        .on("error", (err) => {
+          reject(err);
+          console.log("commitError =", err);
+        });
+    });
   }
 }
 
 async function doDestContract(value, web3) {
-  let { chain, dest, amountToSend, fee, tx, txindex, workindex, isFork } = value
+  let { chain, dest, amountToSend, fee, tx, txindex, workindex, isFork } =
+    value;
 
   const destContract = new web3.eth.Contract(
     config.destABI,
     config.destDic[chain],
     (error, result) => {
-      if (error) console.log(error)
-    },
-  )
+      if (error) console.log(error);
+    }
+  );
 
   let nonce = await web3.eth.getTransactionCount(
     web3.eth.defaultAccount,
-    'pending',
-  )
-  let sql_nonce = nonceDic[chain]
-  let result_nonce = 0
+    "pending"
+  );
+  let sql_nonce = nonceDic[chain];
+  let result_nonce = 0;
   if (!sql_nonce) {
-    result_nonce = nonce
+    result_nonce = nonce;
   } else {
     if (nonce > sql_nonce) {
-      result_nonce = nonce
+      result_nonce = nonce;
     } else {
-      result_nonce = sql_nonce + 1
+      result_nonce = sql_nonce + 1;
     }
   }
-  nonceDic[chain] = result_nonce
-  console.log('nonce =', nonce)
-  console.log('sql_nonce =', sql_nonce)
-  console.log('result_nonde =', result_nonce)
+  nonceDic[chain] = result_nonce;
+  console.log("nonce =", nonce);
+  console.log("sql_nonce =", sql_nonce);
+  console.log("result_nonde =", result_nonce);
 
   /**
    * Fetch the current transaction gas prices from https://ethgasstation.info/
    */
-  let gasPrices = await getCurrentGasPrices(chain)
+  let gasPrices = await getCurrentGasPrices(chain);
 
-  let gasLimit = 1000000
+  let gasLimit = 1000000;
 
   /**
    * Build a new transaction object and sign it locally.
    */
-  let destDetails = {}
-  console.log('tx =', tx)
-  console.log('txindex =', txindex)
-  console.log('dest =', dest)
-  console.log('amountToSend =', amountToSend)
-  console.log('fee =', fee)
-  console.log('workindex =', workindex)
-  console.log('isFork =', isFork)
-  console.log('chain =', chain)
+  let destDetails = {};
+  console.log("tx =", tx);
+  console.log("txindex =", txindex);
+  console.log("dest =", dest);
+  console.log("amountToSend =", amountToSend);
+  console.log("fee =", fee);
+  console.log("workindex =", workindex);
+  console.log("isFork =", isFork);
+  console.log("chain =", chain);
 
+  const workForkKey = generateForkKey(chain, tx, 0);
+  console.warn('workForkKey:: ', workForkKey);
   if (isFork) {
+    console.warn(
+      "chain, tx, txindex, dest, amountToSend, fee >>>> ",
+      chain,
+      tx,
+      txindex,
+      dest,
+      amountToSend,
+      fee
+    );
     destDetails = {
       to: config.destDic[chain],
-      value: '0x0',
+      value: "0x0",
       data: destContract.methods
-        .zFork(chain, tx, txindex, dest, amountToSend, fee, true)
+        .zFork(chain, workForkKey, dest, amountToSend, fee, true)
         .encodeABI(),
       gas: web3.utils.toHex(gasLimit),
       gasPrice: gasPrices, // converts the gwei price to wei
       nonce: result_nonce,
       chainId: config[chain].chainID,
-    }
+    };
   } else {
+    console.warn("chain, tx, 0 >>>> ", chain, tx, 0);
     destDetails = {
       to: config.destDic[chain],
-      value: '0x0',
+      value: "0x0",
       data: destContract.methods
         .claim(
           chain,
-          tx,
-          txindex,
+          workForkKey,
           workindex,
           [{ destination: dest, amount: amountToSend, fee: fee }],
-          [true],
+          [true]
         )
         .encodeABI(),
       gas: web3.utils.toHex(gasLimit),
       gasPrice: gasPrices, // converts the gwei price to wei
       nonce: result_nonce,
       chainId: config[chain].chainID,
-    }
+    };
   }
-  console.log('destDetails =', destDetails)
-  let result_chain = config[chain].chainID
-  let useCommon = false
-  let transaction
+  console.log("destDetails =", destDetails);
+  let result_chain = config[chain].chainID;
+  let useCommon = false;
+  let transaction;
   if (chain === 22 || chain == 77) {
-    useCommon = true
+    useCommon = true;
   }
   if (useCommon) {
     const customCommon = Common.forCustomChain(
-      'mainnet',
+      "mainnet",
       {
-        name: 'toChain',
+        name: "toChain",
         networkId: result_chain,
         chainId: result_chain,
       },
-      'petersburg',
-    )
-    transaction = new EthereumTx(destDetails, { common: customCommon })
+      "petersburg"
+    );
+    transaction = new EthereumTx(destDetails, { common: customCommon });
   } else {
-    transaction = new EthereumTx(destDetails, { chain: result_chain })
+    transaction = new EthereumTx(destDetails, { chain: result_chain });
   }
   /**
    * This is where the transaction is authorized on your behalf.
    * The private key is what unlocks your wallet.
    */
-  transaction.sign(Buffer.from(WALLET_PRIVATE_KEY, 'hex'))
+  transaction.sign(Buffer.from(WALLET_PRIVATE_KEY, "hex"));
 
   /**
    * Now, we'll compress the transaction info down into a transportable object.
    */
-  const serializedTransaction = transaction.serialize()
+  const serializedTransaction = transaction.serialize();
 
   /**
    * Note that the Web3 library is able to automatically determine the "from" address based on your private key.
@@ -284,28 +314,29 @@ async function doDestContract(value, web3) {
    * We're ready! Submit the raw transaction details to the provider configured above.
    */
   web3.eth
-    .sendSignedTransaction('0x' + serializedTransaction.toString('hex'))
-    .on('transactionHash', async (hash) => {
-      console.log('dest_transactionHash =', hash)
-      console.log('****************************************')
+    .sendSignedTransaction("0x" + serializedTransaction.toString("hex"))
+    .on("transactionHash", async (hash) => {
+      console.log("dest_transactionHash =", hash);
+      console.log("****************************************");
     })
-    .on('error', (err) => {
-      console.log('destError =', err)
-    })
+    .on("error", (err) => {
+      console.log("destError =", err);
+    });
 }
 
 async function approveToken(value, web3) {
-  let { chain, dest, amountToSend, fee, tx, txindex, workindex, isFork } = value
+  let { chain, dest, amountToSend, fee, tx, txindex, workindex, isFork } =
+    value;
 
   const tokenContract = new web3.eth.Contract(
     config.tokenABI,
     config.tokenDic[chain],
     (error, result) => {
-      if (error) console.log(error)
-    },
-  )
+      if (error) console.log(error);
+    }
+  );
 
-  let tokenBalanceWei = 0
+  let tokenBalanceWei = 0;
 
   await tokenContract.methods.balanceOf(web3.eth.defaultAccount).call(
     {
@@ -313,26 +344,26 @@ async function approveToken(value, web3) {
     },
     function (error, result) {
       if (!error) {
-        tokenBalanceWei = result
+        tokenBalanceWei = result;
       } else {
-        console.log('tokenBalanceWeiError =', error)
+        console.log("tokenBalanceWeiError =", error);
       }
-    },
-  )
+    }
+  );
   if (!tokenBalanceWei) {
-    console.log('Insufficient balance')
+    console.log("Insufficient balance");
     return {
       code: 1,
-      txid: 'Insufficient balance',
-    }
+      txid: "Insufficient balance",
+    };
   }
-  console.log('tokenBalance =', tokenBalanceWei)
+  console.log("tokenBalance =", tokenBalanceWei);
   if (BigInt(tokenBalanceWei) < BigInt(amountToSend)) {
-    console.log('Insufficient balance')
+    console.log("Insufficient balance");
     return {
       code: 1,
-      txid: 'Insufficient balance',
-    }
+      txid: "Insufficient balance",
+    };
   }
   /**
    * With every new transaction you send using a specific wallet address,
@@ -340,37 +371,37 @@ async function approveToken(value, web3) {
    */
   let nonce = await web3.eth.getTransactionCount(
     web3.eth.defaultAccount,
-    'pending',
-  )
-  let sql_nonce = nonceDic[chain]
-  let result_nonce = 0
+    "pending"
+  );
+  let sql_nonce = nonceDic[chain];
+  let result_nonce = 0;
   if (!sql_nonce) {
-    result_nonce = nonce
+    result_nonce = nonce;
   } else {
     if (nonce > sql_nonce) {
-      result_nonce = nonce
+      result_nonce = nonce;
     } else {
-      result_nonce = sql_nonce + 1
+      result_nonce = sql_nonce + 1;
     }
   }
-  nonceDic[chain] = result_nonce
-  console.log('nonce =', nonce)
-  console.log('sql_nonce =', sql_nonce)
-  console.log('result_nonde =', result_nonce)
+  nonceDic[chain] = result_nonce;
+  console.log("nonce =", nonce);
+  console.log("sql_nonce =", sql_nonce);
+  console.log("result_nonde =", result_nonce);
 
   /**
    * Fetch the current transaction gas prices from https://ethgasstation.info/
    */
-  let gasPrices = await getCurrentGasPrices(chain)
+  let gasPrices = await getCurrentGasPrices(chain);
 
-  let gasLimit = 1000000
+  let gasLimit = 1000000;
 
   /**
    * Build a new transaction object and sign it locally.
    */
   let aprovelDetails = {
     to: config.tokenDic[chain],
-    value: '0x0',
+    value: "0x0",
     data: tokenContract.methods
       .approve(config.destDic[chain], web3.utils.toHex(amountToSend))
       .encodeABI(),
@@ -378,38 +409,38 @@ async function approveToken(value, web3) {
     gasPrice: gasPrices, // converts the gwei price to wei
     nonce: result_nonce,
     chainId: config[chain].chainID, // mainnet: 1, rinkeby: 4
-  }
+  };
 
-  let result_chain = config[chain].chainID
-  let useCommon = false
-  let transaction
+  let result_chain = config[chain].chainID;
+  let useCommon = false;
+  let transaction;
   if (chain === 22 || chain == 77) {
-    useCommon = true
+    useCommon = true;
   }
   if (useCommon) {
     const customCommon = Common.forCustomChain(
-      'mainnet',
+      "mainnet",
       {
-        name: 'toChain',
+        name: "toChain",
         networkId: result_chain,
         chainId: result_chain,
       },
-      'petersburg',
-    )
-    transaction = new EthereumTx(aprovelDetails, { common: customCommon })
+      "petersburg"
+    );
+    transaction = new EthereumTx(aprovelDetails, { common: customCommon });
   } else {
-    transaction = new EthereumTx(aprovelDetails, { chain: result_chain })
+    transaction = new EthereumTx(aprovelDetails, { chain: result_chain });
   }
   /**
    * This is where the transaction is authorized on your behalf.
    * The private key is what unlocks your wallet.
    */
-  transaction.sign(Buffer.from(WALLET_PRIVATE_KEY, 'hex'))
+  transaction.sign(Buffer.from(WALLET_PRIVATE_KEY, "hex"));
 
   /**
    * Now, we'll compress the transaction info down into a transportable object.
    */
-  const serializedTransaction = transaction.serialize()
+  const serializedTransaction = transaction.serialize();
 
   /**
    * Note that the Web3 library is able to automatically determine the "from" address based on your private key.
@@ -420,26 +451,26 @@ async function approveToken(value, web3) {
    * We're ready! Submit the raw transaction details to the provider configured above.
    */
   web3.eth
-    .sendSignedTransaction('0x' + serializedTransaction.toString('hex'))
-    .on('transactionHash', async (hash) => {
-      console.log('approve_transactionHash =', hash)
+    .sendSignedTransaction("0x" + serializedTransaction.toString("hex"))
+    .on("transactionHash", async (hash) => {
+      console.log("approve_transactionHash =", hash);
       // destContract
-      doDestContract(value, web3)
+      doDestContract(value, web3);
     })
-    .on('error', (err) => {
-      console.log('approveError =', err)
-    })
+    .on("error", (err) => {
+      console.log("approveError =", err);
+    });
 }
 
 async function sendConsumer(value) {
-  let { chain } = value
+  let { chain } = value;
 
-  console.log('chain =', chain)
-  const web3Net = config[chain].httpEndPoint
-  const web3 = new Web3(web3Net)
-  web3.eth.defaultAccount = WALLET_ADDRESS
+  console.log("chain =", chain);
+  const web3Net = config[chain].httpEndPoint;
+  const web3 = new Web3(web3Net);
+  web3.eth.defaultAccount = WALLET_ADDRESS;
 
-  await approveToken(value, web3)
+  await approveToken(value, web3);
 }
 
 /**
@@ -453,9 +484,9 @@ async function send(
   tx,
   txindex,
   workindex,
-  isFork,
+  isFork
 ) {
-  sendQueue.registerConsumer(chain, sendConsumer)
+  sendQueue.registerConsumer(chain, sendConsumer);
 
   return new Promise((resolve, reject) => {
     const value = {
@@ -467,21 +498,21 @@ async function send(
       txindex,
       workindex,
       isFork,
-    }
+    };
     sendQueue.produce(chain, {
       value,
       callback: (error, result) => {
         if (error) {
-          reject(error)
+          reject(error);
         } else {
-          resolve(result)
+          resolve(result);
         }
       },
-    })
-  })
+    });
+  });
 }
 
 module.exports = {
   send,
   becomeCommit,
-}
+};

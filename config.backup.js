@@ -3,37 +3,37 @@ module.exports = {
     wsEndPoint: "wss://eth-rinkeby.alchemyapi.io/v2/APIKEY",
     httpEndPoint: "https://eth-rinkeby.alchemyapi.io/v2/APIKEY",
     gasPrice: "10",
-    chainID: 4
+    chainID: 4,
   },
   22: {
     wsEndPoint: "wss://arb-rinkeby.g.alchemy.com/v2/APIKEY",
     httpEndPoint: "https://arb-rinkeby.g.alchemy.com/v2/APIKEY",
     gasPrice: "10",
-    chainID: 421611
+    chainID: 421611,
   },
   77: {
     wsEndPoint: "wss://opt-kovan.g.alchemy.com/v2/APIKEY",
     httpEndPoint: "https://opt-kovan.g.alchemy.com/v2/APIKEY",
-    chainID: 69
+    chainID: 69,
   },
   makerAddress: "yourAddress",
   privatekey: "privateKey",
   destDic: {
-    5: "0x06bcb27827dEA0c76ea0975c9d26E7Ec239B6cC0",
-    22: "0xeda8D1c38074263d4e174D37857E66f948CF8aD5",
-    77: "0x1aB15C4Ef458b45e1a7Ed3Ef1e534B71b8c5113c"
+    5: "0x7C95992971126Ef3696F784c4c0Ab1b803C21119",
+    22: "0x7DBB80Af9e383175A28f26F93Bc084dd11D4B140",
+    77: "0xD9D8C926D2A6eE7614f517705e0EFe2c6f21606E",
   },
 
   sourceDic: {
-    5: "0x11d3985F79EC388077C930A9F8619CeDBB22b840",
-    22: "0x27a4DcB2846bebcE415b6fc406cF8bFCB5d1055c",
-    77: "0xf3c3988609cB90b0C64e5De511eE27D3A6d703f1"
+    5: "0x3E233D544bF0C6930DC1026e1019089E67541CEa",
+    22: "0xd131370ae51E1E784023a800E6b7761FB04152ed",
+    77: "0xeA03aaFAAC5c51f77d730E52b36e9B66222Ce324",
   },
 
   tokenDic: {
-    5: "0x9C37dB6B4ddd21d6C0ef89065c1C353719fc63aB",
-    22: "0x750Bf8642CCe3644A0E434026f5Bd392bA13d1F1",
-    77: "0xf1F75cd394D76065d836DD58E93c4c8e9a003D6E"
+    5: "0xD0Ad980Dd0FdC0A60631bD50337Dae5e7ce216Fb",
+    22: "0x575BEbf4C0aE051322b66B9141F6CB0ab5479226",
+    77: "0x6658F71d30dEe4640A8d88861b35683A125B736c",
   },
 
   destABI: [
@@ -42,11 +42,35 @@ module.exports = {
         {
           internalType: "address",
           name: "_tokenAddress",
-          type: "address"
-        }
+          type: "address",
+        },
+        {
+          internalType: "address",
+          name: "_dockAddr",
+          type: "address",
+        },
       ],
       stateMutability: "nonpayable",
-      type: "constructor"
+      type: "constructor",
+    },
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: true,
+          internalType: "address",
+          name: "previousOwner",
+          type: "address",
+        },
+        {
+          indexed: true,
+          internalType: "address",
+          name: "newOwner",
+          type: "address",
+        },
+      ],
+      name: "OwnershipTransferred",
+      type: "event",
     },
     {
       anonymous: false,
@@ -55,23 +79,23 @@ module.exports = {
           indexed: false,
           internalType: "uint256",
           name: "txIndex",
-          type: "uint256"
+          type: "uint256",
         },
         {
           indexed: false,
           internalType: "uint256",
           name: "amount",
-          type: "uint256"
+          type: "uint256",
         },
         {
           indexed: false,
           internalType: "bytes32",
           name: "hashOnion",
-          type: "bytes32"
-        }
+          type: "bytes32",
+        },
       ],
       name: "newBond",
-      type: "event"
+      type: "event",
     },
     {
       anonymous: false,
@@ -80,35 +104,48 @@ module.exports = {
           indexed: false,
           internalType: "address",
           name: "dest",
-          type: "address"
+          type: "address",
         },
         {
           indexed: false,
           internalType: "uint256",
           name: "amount",
-          type: "uint256"
+          type: "uint256",
         },
         {
           indexed: false,
           internalType: "uint256",
           name: "fee",
-          type: "uint256"
+          type: "uint256",
         },
         {
           indexed: false,
           internalType: "uint256",
           name: "txindex",
-          type: "uint256"
+          type: "uint256",
         },
         {
           indexed: false,
           internalType: "bytes32",
           name: "hashOnion",
-          type: "bytes32"
-        }
+          type: "bytes32",
+        },
       ],
       name: "newClaim",
-      type: "event"
+      type: "event",
+    },
+    {
+      inputs: [],
+      name: "DEPOSIT_AMOUNT",
+      outputs: [
+        {
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
+      ],
+      stateMutability: "view",
+      type: "function",
     },
     {
       inputs: [],
@@ -117,461 +154,709 @@ module.exports = {
         {
           internalType: "uint256",
           name: "",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       stateMutability: "view",
-      type: "function"
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          internalType: "address",
+          name: "source",
+          type: "address",
+        },
+      ],
+      name: "addDomain",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
       inputs: [],
       name: "becomeCommiter",
       outputs: [],
       stateMutability: "nonpayable",
-      type: "function"
-    },
-    {
-      inputs: [
-        {
-          internalType: "uint256",
-          name: "_forkKey",
-          type: "uint256"
-        },
-        {
-          internalType: "uint256",
-          name: "_forkId",
-          type: "uint256"
-        }
-      ],
-      name: "buyOneFork",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function"
-    },
-    {
-      inputs: [
-        {
-          internalType: "bytes32",
-          name: "preHashOnion",
-          type: "bytes32"
-        },
-        {
-          components: [
-            {
-              internalType: "address",
-              name: "destination",
-              type: "address"
-            },
-            {
-              internalType: "uint256",
-              name: "amount",
-              type: "uint256"
-            },
-            {
-              internalType: "uint256",
-              name: "fee",
-              type: "uint256"
-            }
-          ],
-          internalType: "struct Data.TransferData",
-          name: "_transferData",
-          type: "tuple"
-        }
-      ],
-      name: "buyOneOnion",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function"
+      type: "function",
     },
     {
       inputs: [
         {
           internalType: "uint256",
           name: "chainId",
-          type: "uint256"
+          type: "uint256",
+        },
+        {
+          internalType: "uint256",
+          name: "forkKeyNum",
+          type: "uint256",
+        },
+      ],
+      name: "blockDepositOneFork",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
         },
         {
           internalType: "bytes32",
+          name: "hashOnion",
+          type: "bytes32",
+        },
+      ],
+      name: "bondSourceHashOnion",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          internalType: "uint256",
           name: "_forkKey",
-          type: "bytes32"
+          type: "uint256",
         },
         {
           internalType: "uint256",
-          name: "_forkIndex",
-          type: "uint256"
+          name: "_forkId",
+          type: "uint256",
         },
+      ],
+      name: "buyOneFork",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
         {
           internalType: "uint256",
-          name: "_workIndex",
-          type: "uint256"
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          internalType: "bytes32",
+          name: "preHashOnion",
+          type: "bytes32",
         },
         {
           components: [
             {
               internalType: "address",
               name: "destination",
-              type: "address"
+              type: "address",
             },
             {
               internalType: "uint256",
               name: "amount",
-              type: "uint256"
+              type: "uint256",
             },
             {
               internalType: "uint256",
               name: "fee",
-              type: "uint256"
-            }
+              type: "uint256",
+            },
           ],
-          internalType: "struct Data.TransferData[]",
-          name: "_transferDatas",
-          type: "tuple[]"
+          internalType: "struct Data.TransferData",
+          name: "_transferData",
+          type: "tuple",
         },
-        {
-          internalType: "bool[]",
-          name: "_isResponds",
-          type: "bool[]"
-        }
       ],
-      name: "claim",
+      name: "buyOneOnion",
       outputs: [],
       stateMutability: "nonpayable",
-      type: "function"
+      type: "function",
     },
     {
       inputs: [
         {
-          internalType: "address",
-          name: "",
-          type: "address"
-        }
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          internalType: "bytes32",
+          name: "workForkKey",
+          type: "bytes32",
+        },
+        {
+          internalType: "uint256",
+          name: "_workIndex",
+          type: "uint256",
+        },
+        {
+          components: [
+            {
+              internalType: "address",
+              name: "destination",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "fee",
+              type: "uint256",
+            },
+          ],
+          internalType: "struct Data.TransferData[]",
+          name: "_transferDatas",
+          type: "tuple[]",
+        },
+        {
+          internalType: "bool[]",
+          name: "_isResponds",
+          type: "bool[]",
+        },
       ],
-      name: "commiterDeposit",
+      name: "claim",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          internalType: "uint256",
+          name: "forkKeyNum",
+          type: "uint256",
+        },
+      ],
+      name: "creatPToken",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          internalType: "bytes32",
+          name: "forkKey",
+          type: "bytes32",
+        },
+      ],
+      name: "depositWithOneFork",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+      ],
+      name: "depositwithMutiMFork",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "dockAddr",
       outputs: [
         {
-          internalType: "bool",
+          internalType: "address",
           name: "",
-          type: "bool"
-        }
+          type: "address",
+        },
       ],
       stateMutability: "view",
-      type: "function"
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          internalType: "bytes32",
+          name: "hashOnion",
+          type: "bytes32",
+        },
+        {
+          internalType: "uint8",
+          name: "index",
+          type: "uint8",
+        },
+      ],
+      name: "getHashOnionFork",
+      outputs: [
+        {
+          components: [
+            {
+              internalType: "bytes32",
+              name: "onionHead",
+              type: "bytes32",
+            },
+            {
+              internalType: "bytes32",
+              name: "destOnionHead",
+              type: "bytes32",
+            },
+            {
+              internalType: "uint256",
+              name: "allAmount",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "length",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "lastCommiterAddress",
+              type: "address",
+            },
+            {
+              internalType: "bool",
+              name: "needBond",
+              type: "bool",
+            },
+          ],
+          internalType: "struct Fork.Info",
+          name: "",
+          type: "tuple",
+        },
+      ],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+      ],
+      name: "getHashOnionInfo",
+      outputs: [
+        {
+          components: [
+            {
+              internalType: "bytes32",
+              name: "sourceHashOnion",
+              type: "bytes32",
+            },
+            {
+              internalType: "bytes32",
+              name: "onWorkHashOnion",
+              type: "bytes32",
+            },
+          ],
+          internalType: "struct HashOnions.Info",
+          name: "",
+          type: "tuple",
+        },
+      ],
+      stateMutability: "view",
+      type: "function",
     },
     {
       inputs: [
         {
           internalType: "bytes32",
           name: "",
-          type: "bytes32"
+          type: "bytes32",
         },
-        {
-          internalType: "uint256",
-          name: "",
-          type: "uint256"
-        }
       ],
       name: "hashOnionForks",
       outputs: [
         {
           internalType: "bytes32",
           name: "onionHead",
-          type: "bytes32"
+          type: "bytes32",
         },
         {
           internalType: "bytes32",
           name: "destOnionHead",
-          type: "bytes32"
+          type: "bytes32",
         },
         {
           internalType: "uint256",
           name: "allAmount",
-          type: "uint256"
+          type: "uint256",
         },
         {
           internalType: "uint256",
           name: "length",
-          type: "uint256"
+          type: "uint256",
         },
         {
           internalType: "address",
           name: "lastCommiterAddress",
-          type: "address"
+          type: "address",
         },
         {
           internalType: "bool",
           name: "needBond",
-          type: "bool"
-        }
+          type: "bool",
+        },
       ],
       stateMutability: "view",
-      type: "function"
-    },
-    {
-      inputs: [
-        {
-          internalType: "bytes32",
-          name: "_lastOnionHead",
-          type: "bytes32"
-        },
-        {
-          internalType: "bytes32",
-          name: "_lastDestOnionHead",
-          type: "bytes32"
-        },
-        {
-          internalType: "uint8",
-          name: "_index",
-          type: "uint8"
-        },
-        {
-          components: [
-            {
-              internalType: "address",
-              name: "destination",
-              type: "address"
-            },
-            {
-              internalType: "uint256",
-              name: "amount",
-              type: "uint256"
-            },
-            {
-              internalType: "uint256",
-              name: "fee",
-              type: "uint256"
-            }
-          ],
-          internalType: "struct Data.TransferData",
-          name: "_transferData",
-          type: "tuple"
-        },
-        {
-          internalType: "bool",
-          name: "_isRespond",
-          type: "bool"
-        }
-      ],
-      name: "mFork",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function"
-    },
-    {
-      inputs: [
-        {
-          components: [
-            {
-              internalType: "bytes32",
-              name: "forkKey",
-              type: "bytes32"
-            },
-            {
-              internalType: "uint256",
-              name: "forkIndex",
-              type: "uint256"
-            },
-            {
-              internalType: "bytes32[]",
-              name: "wrongtxHash",
-              type: "bytes32[]"
-            }
-          ],
-          internalType: "struct IDestinationContract.MForkData[]",
-          name: "_mForkDatas",
-          type: "tuple[]"
-        },
-        {
-          internalType: "bytes32",
-          name: "_preForkKey",
-          type: "bytes32"
-        },
-        {
-          internalType: "uint256",
-          name: "_preForkIndex",
-          type: "uint256"
-        },
-        {
-          components: [
-            {
-              internalType: "address",
-              name: "destination",
-              type: "address"
-            },
-            {
-              internalType: "uint256",
-              name: "amount",
-              type: "uint256"
-            },
-            {
-              internalType: "uint256",
-              name: "fee",
-              type: "uint256"
-            }
-          ],
-          internalType: "struct Data.TransferData[]",
-          name: "_transferDatas",
-          type: "tuple[]"
-        },
-        {
-          internalType: "address[]",
-          name: "_commiters",
-          type: "address[]"
-        }
-      ],
-      name: "mbond",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function"
-    },
-    {
-      inputs: [],
-      name: "onWorkHashOnion",
-      outputs: [
-        {
-          internalType: "bytes32",
-          name: "",
-          type: "bytes32"
-        }
-      ],
-      stateMutability: "view",
-      type: "function"
-    },
-    {
-      inputs: [
-        {
-          internalType: "bytes32",
-          name: "_sourceHashOnion",
-          type: "bytes32"
-        }
-      ],
-      name: "setHashOnion",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function"
-    },
-    {
-      inputs: [],
-      name: "sourceHashOnion",
-      outputs: [
-        {
-          internalType: "bytes32",
-          name: "",
-          type: "bytes32"
-        }
-      ],
-      stateMutability: "view",
-      type: "function"
+      type: "function",
     },
     {
       inputs: [
         {
           internalType: "uint256",
           name: "chainId",
-          type: "uint256"
+          type: "uint256",
         },
         {
           internalType: "bytes32",
-          name: "_forkKey",
-          type: "bytes32"
+          name: "_lastOnionHead",
+          type: "bytes32",
+        },
+        {
+          internalType: "bytes32",
+          name: "_lastDestOnionHead",
+          type: "bytes32",
         },
         {
           internalType: "uint8",
           name: "_index",
-          type: "uint8"
-        },
-        {
-          internalType: "address",
-          name: "dest",
-          type: "address"
-        },
-        {
-          internalType: "uint256",
-          name: "amount",
-          type: "uint256"
-        },
-        {
-          internalType: "uint256",
-          name: "fee",
-          type: "uint256"
-        },
-        {
-          internalType: "bool",
-          name: "_isRespond",
-          type: "bool"
-        }
-      ],
-      name: "zFork",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function"
-    },
-    {
-      inputs: [
-        {
-          internalType: "bytes32",
-          name: "_forkKey",
-          type: "bytes32"
-        },
-        {
-          internalType: "bytes32",
-          name: "_preForkKey",
-          type: "bytes32"
-        },
-        {
-          internalType: "uint256",
-          name: "_preForkIndex",
-          type: "uint256"
+          type: "uint8",
         },
         {
           components: [
             {
               internalType: "address",
               name: "destination",
-              type: "address"
+              type: "address",
             },
             {
               internalType: "uint256",
               name: "amount",
-              type: "uint256"
+              type: "uint256",
             },
             {
               internalType: "uint256",
               name: "fee",
-              type: "uint256"
-            }
+              type: "uint256",
+            },
+          ],
+          internalType: "struct Data.TransferData",
+          name: "_transferData",
+          type: "tuple",
+        },
+        {
+          internalType: "bool",
+          name: "_isRespond",
+          type: "bool",
+        },
+      ],
+      name: "mFork",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          internalType: "bytes32",
+          name: "preWorkForkKey",
+          type: "bytes32",
+        },
+        {
+          components: [
+            {
+              internalType: "uint8",
+              name: "forkIndex",
+              type: "uint8",
+            },
+            {
+              internalType: "bytes32",
+              name: "forkKey",
+              type: "bytes32",
+            },
+            {
+              internalType: "bytes32[]",
+              name: "wrongtxHash",
+              type: "bytes32[]",
+            },
+          ],
+          internalType: "struct Data.MForkData[]",
+          name: "_mForkDatas",
+          type: "tuple[]",
+        },
+        {
+          components: [
+            {
+              internalType: "address",
+              name: "destination",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "fee",
+              type: "uint256",
+            },
           ],
           internalType: "struct Data.TransferData[]",
           name: "_transferDatas",
-          type: "tuple[]"
+          type: "tuple[]",
         },
         {
           internalType: "address[]",
           name: "_commiters",
-          type: "address[]"
-        }
+          type: "address[]",
+        },
+      ],
+      name: "mbond",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "owner",
+      outputs: [
+        {
+          internalType: "address",
+          name: "",
+          type: "address",
+        },
+      ],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "renounceOwnership",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          internalType: "bytes32",
+          name: "onion",
+          type: "bytes32",
+        },
+        {
+          internalType: "bool",
+          name: "equal",
+          type: "bool",
+        },
+      ],
+      name: "setOnWorkHashOnion",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          internalType: "uint256",
+          name: "forkKeyNum",
+          type: "uint256",
+        },
+      ],
+      name: "settlement",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "address",
+          name: "newOwner",
+          type: "address",
+        },
+      ],
+      name: "transferOwnership",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          internalType: "bytes32",
+          name: "workForkKey",
+          type: "bytes32",
+        },
+        {
+          internalType: "address",
+          name: "dest",
+          type: "address",
+        },
+        {
+          internalType: "uint256",
+          name: "amount",
+          type: "uint256",
+        },
+        {
+          internalType: "uint256",
+          name: "fee",
+          type: "uint256",
+        },
+        {
+          internalType: "bool",
+          name: "_isRespond",
+          type: "bool",
+        },
+      ],
+      name: "zFork",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          internalType: "bytes32",
+          name: "hashOnion",
+          type: "bytes32",
+        },
+        {
+          internalType: "bytes32",
+          name: "_preHashOnion",
+          type: "bytes32",
+        },
+        {
+          components: [
+            {
+              internalType: "address",
+              name: "destination",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "fee",
+              type: "uint256",
+            },
+          ],
+          internalType: "struct Data.TransferData[]",
+          name: "_transferDatas",
+          type: "tuple[]",
+        },
+        {
+          internalType: "address[]",
+          name: "_commiters",
+          type: "address[]",
+        },
       ],
       name: "zbond",
       outputs: [],
       stateMutability: "nonpayable",
-      type: "function"
-    }
+      type: "function",
+    },
   ],
   sourceABI: [
     {
       inputs: [
         {
           internalType: "address",
-          name: "_l2Messenger",
-          type: "address"
+          name: "_tokenAddress",
+          type: "address",
         },
         {
           internalType: "address",
-          name: "_tokenAddress",
-          type: "address"
-        }
+          name: "_dockAddr",
+          type: "address",
+        },
+        {
+          internalType: "address",
+          name: "_sameDomainDestAddress",
+          type: "address",
+        },
       ],
       stateMutability: "nonpayable",
-      type: "constructor"
+      type: "constructor",
+    },
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: true,
+          internalType: "address",
+          name: "previousOwner",
+          type: "address",
+        },
+        {
+          indexed: true,
+          internalType: "address",
+          name: "newOwner",
+          type: "address",
+        },
+      ],
+      name: "OwnershipTransferred",
+      type: "event",
     },
     {
       anonymous: false,
@@ -580,23 +865,23 @@ module.exports = {
           indexed: false,
           internalType: "uint256",
           name: "txIndex",
-          type: "uint256"
+          type: "uint256",
         },
         {
           indexed: false,
           internalType: "uint256",
           name: "amount",
-          type: "uint256"
+          type: "uint256",
         },
         {
           indexed: false,
           internalType: "bytes32",
           name: "hashOnion",
-          type: "bytes32"
-        }
+          type: "bytes32",
+        },
       ],
       name: "extract",
-      type: "event"
+      type: "event",
     },
     {
       anonymous: false,
@@ -605,41 +890,41 @@ module.exports = {
           indexed: true,
           internalType: "uint256",
           name: "txindex",
-          type: "uint256"
+          type: "uint256",
         },
         {
           indexed: false,
           internalType: "bytes32",
           name: "hashOnion",
-          type: "bytes32"
+          type: "bytes32",
         },
         {
           indexed: false,
           internalType: "address",
           name: "dest",
-          type: "address"
+          type: "address",
         },
         {
           indexed: false,
           internalType: "uint256",
           name: "amount",
-          type: "uint256"
+          type: "uint256",
         },
         {
           indexed: false,
           internalType: "uint256",
           name: "fee",
-          type: "uint256"
+          type: "uint256",
         },
         {
           indexed: true,
           internalType: "uint256",
           name: "chainId",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       name: "newTransfer",
-      type: "event"
+      type: "event",
     },
     {
       inputs: [],
@@ -648,69 +933,122 @@ module.exports = {
         {
           internalType: "uint8",
           name: "",
-          type: "uint8"
-        }
+          type: "uint8",
+        },
       ],
       stateMutability: "view",
-      type: "function"
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          internalType: "address",
+          name: "destContract",
+          type: "address",
+        },
+      ],
+      name: "addDestDomain",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
       inputs: [
         {
           internalType: "uint256",
           name: "",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       name: "chainId_Onions",
       outputs: [
         {
+          internalType: "uint256",
+          name: "txIndex",
+          type: "uint256",
+        },
+        {
           internalType: "bytes32",
-          name: "",
-          type: "bytes32"
-        }
+          name: "hashOnion",
+          type: "bytes32",
+        },
+        {
+          internalType: "bytes32",
+          name: "bringHashOnion",
+          type: "bytes32",
+        },
+        {
+          internalType: "address",
+          name: "destAddress",
+          type: "address",
+        },
       ],
       stateMutability: "view",
-      type: "function"
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "dockAddr",
+      outputs: [
+        {
+          internalType: "address",
+          name: "",
+          type: "address",
+        },
+      ],
+      stateMutability: "view",
+      type: "function",
     },
     {
       inputs: [
         {
-          internalType: "address",
-          name: "raley",
-          type: "address"
-        }
+          internalType: "uint256",
+          name: "_chainId",
+          type: "uint256",
+        },
       ],
-      name: "extractHashOnionAndBalance",
+      name: "extractHashOnion",
       outputs: [],
-      stateMutability: "payable",
-      type: "function"
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
       inputs: [],
-      name: "hashOnion",
-      outputs: [
-        {
-          internalType: "bytes32",
-          name: "",
-          type: "bytes32"
-        }
-      ],
-      stateMutability: "view",
-      type: "function"
-    },
-    {
-      inputs: [],
-      name: "l2Messenger",
+      name: "owner",
       outputs: [
         {
           internalType: "address",
           name: "",
-          type: "address"
-        }
+          type: "address",
+        },
       ],
       stateMutability: "view",
-      type: "function"
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "renounceOwnership",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "sameDomainDestAddress",
+      outputs: [
+        {
+          internalType: "address",
+          name: "",
+          type: "address",
+        },
+      ],
+      stateMutability: "view",
+      type: "function",
     },
     {
       inputs: [],
@@ -719,63 +1057,76 @@ module.exports = {
         {
           internalType: "address",
           name: "",
-          type: "address"
-        }
+          type: "address",
+        },
       ],
       stateMutability: "view",
-      type: "function"
+      type: "function",
     },
     {
       inputs: [
         {
           internalType: "uint256",
           name: "chainId",
-          type: "uint256"
+          type: "uint256",
         },
         {
           internalType: "uint256",
           name: "amount",
-          type: "uint256"
+          type: "uint256",
         },
         {
           internalType: "uint256",
           name: "fee",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       name: "transfer",
       outputs: [],
       stateMutability: "payable",
-      type: "function"
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "address",
+          name: "newOwner",
+          type: "address",
+        },
+      ],
+      name: "transferOwnership",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
     },
     {
       inputs: [
         {
           internalType: "uint256",
           name: "chainId",
-          type: "uint256"
+          type: "uint256",
         },
         {
           internalType: "address",
           name: "dest",
-          type: "address"
+          type: "address",
         },
         {
           internalType: "uint256",
           name: "amount",
-          type: "uint256"
+          type: "uint256",
         },
         {
           internalType: "uint256",
           name: "fee",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       name: "transferWithDest",
       outputs: [],
       stateMutability: "payable",
-      type: "function"
-    }
+      type: "function",
+    },
   ],
   tokenABI: [
     {
@@ -783,11 +1134,11 @@ module.exports = {
         {
           internalType: "uint256",
           name: "initialBalance",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       stateMutability: "nonpayable",
-      type: "constructor"
+      type: "constructor",
     },
     {
       anonymous: false,
@@ -796,23 +1147,23 @@ module.exports = {
           indexed: true,
           internalType: "address",
           name: "owner",
-          type: "address"
+          type: "address",
         },
         {
           indexed: true,
           internalType: "address",
           name: "spender",
-          type: "address"
+          type: "address",
         },
         {
           indexed: false,
           internalType: "uint256",
           name: "value",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       name: "Approval",
-      type: "event"
+      type: "event",
     },
     {
       anonymous: false,
@@ -821,90 +1172,90 @@ module.exports = {
           indexed: true,
           internalType: "address",
           name: "from",
-          type: "address"
+          type: "address",
         },
         {
           indexed: true,
           internalType: "address",
           name: "to",
-          type: "address"
+          type: "address",
         },
         {
           indexed: false,
           internalType: "uint256",
           name: "value",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       name: "Transfer",
-      type: "event"
+      type: "event",
     },
     {
       inputs: [
         {
           internalType: "address",
           name: "owner",
-          type: "address"
+          type: "address",
         },
         {
           internalType: "address",
           name: "spender",
-          type: "address"
-        }
+          type: "address",
+        },
       ],
       name: "allowance",
       outputs: [
         {
           internalType: "uint256",
           name: "",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       stateMutability: "view",
-      type: "function"
+      type: "function",
     },
     {
       inputs: [
         {
           internalType: "address",
           name: "spender",
-          type: "address"
+          type: "address",
         },
         {
           internalType: "uint256",
           name: "amount",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       name: "approve",
       outputs: [
         {
           internalType: "bool",
           name: "",
-          type: "bool"
-        }
+          type: "bool",
+        },
       ],
       stateMutability: "nonpayable",
-      type: "function"
+      type: "function",
     },
     {
       inputs: [
         {
           internalType: "address",
           name: "account",
-          type: "address"
-        }
+          type: "address",
+        },
       ],
       name: "balanceOf",
       outputs: [
         {
           internalType: "uint256",
           name: "",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       stateMutability: "view",
-      type: "function"
+      type: "function",
     },
     {
       inputs: [],
@@ -913,59 +1264,59 @@ module.exports = {
         {
           internalType: "uint8",
           name: "",
-          type: "uint8"
-        }
+          type: "uint8",
+        },
       ],
       stateMutability: "view",
-      type: "function"
+      type: "function",
     },
     {
       inputs: [
         {
           internalType: "address",
           name: "spender",
-          type: "address"
+          type: "address",
         },
         {
           internalType: "uint256",
           name: "subtractedValue",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       name: "decreaseAllowance",
       outputs: [
         {
           internalType: "bool",
           name: "",
-          type: "bool"
-        }
+          type: "bool",
+        },
       ],
       stateMutability: "nonpayable",
-      type: "function"
+      type: "function",
     },
     {
       inputs: [
         {
           internalType: "address",
           name: "spender",
-          type: "address"
+          type: "address",
         },
         {
           internalType: "uint256",
           name: "addedValue",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       name: "increaseAllowance",
       outputs: [
         {
           internalType: "bool",
           name: "",
-          type: "bool"
-        }
+          type: "bool",
+        },
       ],
       stateMutability: "nonpayable",
-      type: "function"
+      type: "function",
     },
     {
       inputs: [],
@@ -974,11 +1325,11 @@ module.exports = {
         {
           internalType: "string",
           name: "",
-          type: "string"
-        }
+          type: "string",
+        },
       ],
       stateMutability: "view",
-      type: "function"
+      type: "function",
     },
     {
       inputs: [],
@@ -987,11 +1338,11 @@ module.exports = {
         {
           internalType: "string",
           name: "",
-          type: "string"
-        }
+          type: "string",
+        },
       ],
       stateMutability: "view",
-      type: "function"
+      type: "function",
     },
     {
       inputs: [],
@@ -1000,64 +1351,64 @@ module.exports = {
         {
           internalType: "uint256",
           name: "",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       stateMutability: "view",
-      type: "function"
+      type: "function",
     },
     {
       inputs: [
         {
           internalType: "address",
-          name: "recipient",
-          type: "address"
+          name: "to",
+          type: "address",
         },
         {
           internalType: "uint256",
           name: "amount",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       name: "transfer",
       outputs: [
         {
           internalType: "bool",
           name: "",
-          type: "bool"
-        }
+          type: "bool",
+        },
       ],
       stateMutability: "nonpayable",
-      type: "function"
+      type: "function",
     },
     {
       inputs: [
         {
           internalType: "address",
-          name: "sender",
-          type: "address"
+          name: "from",
+          type: "address",
         },
         {
           internalType: "address",
-          name: "recipient",
-          type: "address"
+          name: "to",
+          type: "address",
         },
         {
           internalType: "uint256",
           name: "amount",
-          type: "uint256"
-        }
+          type: "uint256",
+        },
       ],
       name: "transferFrom",
       outputs: [
         {
           internalType: "bool",
           name: "",
-          type: "bool"
-        }
+          type: "bool",
+        },
       ],
       stateMutability: "nonpayable",
-      type: "function"
-    }
-  ]
+      type: "function",
+    },
+  ],
 };
