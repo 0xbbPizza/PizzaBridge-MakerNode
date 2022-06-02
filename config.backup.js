@@ -19,17 +19,17 @@ module.exports = {
   makerAddress: "yourAddress",
   privatekey: "privateKey",
   destDic: {
-    5: "0xD6188c603da69d05579CAa47ec38601ac3c54d06",
+    5: "0x1589fCC1322038392208ddE47bA09f8fCC1333C2",
     // TODO Watting Arbiturm netwrok ok
     // 22: "0x7DBB80Af9e383175A28f26F93Bc084dd11D4B140",
-    77: "0xFe02F32ED694B625f588B7058F919BB4E44C0457",
+    77: "0x92158a56b52a6fe2bCcF42072f5AB0E4FD850bC9",
   },
 
   sourceDic: {
-    5: "0x36DeF6b0e0adf483619aB8A6c9Fba982853Daf5f",
+    5: "0x8C5484C03283401FE7b5Ae2901D45Eaf621dDc5e",
     // TODO Watting Arbiturm netwrok ok
     // 22: "0xd131370ae51E1E784023a800E6b7761FB04152ed",
-    77: "0x929fD178Bbb3270BE58510ba3b6083eB8EfB4382",
+    77: "0x5377c210524F0BCcF510Af6f1631f79618b3e356",
   },
 
   tokenDic: {
