@@ -20,22 +20,19 @@ module.exports = {
   privatekey: "privateKey",
   destDic: {
     5: "0x1589fCC1322038392208ddE47bA09f8fCC1333C2",
-    // TODO Watting Arbiturm netwrok ok
-    // 22: "0x7DBB80Af9e383175A28f26F93Bc084dd11D4B140",
+    22: "0x16c654822c4a287A6f62D1C8ac8cB433120a4597",
     77: "0x92158a56b52a6fe2bCcF42072f5AB0E4FD850bC9",
   },
 
   sourceDic: {
     5: "0x8C5484C03283401FE7b5Ae2901D45Eaf621dDc5e",
-    // TODO Watting Arbiturm netwrok ok
-    // 22: "0xd131370ae51E1E784023a800E6b7761FB04152ed",
+    22: "0xeD8a756317699A30a1f2b7a6A7887be33e053781",
     77: "0x5377c210524F0BCcF510Af6f1631f79618b3e356",
   },
 
   tokenDic: {
     5: "0x2e055eEe18284513B993dB7568A592679aB13188",
-    // TODO Watting Arbiturm netwrok ok
-    // 22: "0x575BEbf4C0aE051322b66B9141F6CB0ab5479226",
+    22: "0xAe60819A0258e8D34580bf26C755331e8B4B79b4",
     77: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
   },
 

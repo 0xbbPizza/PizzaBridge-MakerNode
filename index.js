@@ -73,8 +73,7 @@ async function testExpress() {
   // test();
   try {
     await sendTransaction.becomeCommit(5);
-    // TODO Watting Arbiturm netwrok ok
-    // await sendTransaction.becomeCommit(22);
+    await sendTransaction.becomeCommit(22);
     await sendTransaction.becomeCommit(77);
   } catch (error) {
     console.error("commiter_error =", error);
