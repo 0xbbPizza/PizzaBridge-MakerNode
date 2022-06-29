@@ -31,9 +31,9 @@ function test() {
   const options = {
     filter: {
       txindex: 1,
-      chainId: toChain
+      chainId: toChain,
     },
-    fromBlock: "0"
+    fromBlock: "0",
   };
 
   sourceContract.getPastEvents("newTransfer", options, async (err, events) => {
@@ -126,7 +126,7 @@ function watchPool(address, providers, chain, isSource) {
     );
     // Generate filter options
     const options = {
-      fromBlock: "latest"
+      fromBlock: "latest",
     };
 
     // Subscribe to Transfer events matching filter criteria
@@ -177,68 +177,65 @@ async function doDest(sourceContract, value) {
 
   let tx = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
-  //
-
-  if (txindex === 1) {
-    //zfork
-    await sendTransaction.send(
-      Number(chain),
-      dest,
-      amountToSend,
-      fee,
-      tx,
-      0,
-      workindex,
-      isFork
-    );
-  } else {
+  // Get last hashOnion from sourceContract events
+  if (txindex > 1) {
     if (txindex % workLimit === 1) {
       searchIndex = txindex - workLimit;
       // zfork
     } else {
+      // When workLimit = 5
+      // If txindex = 4, workindex = 4 % 5 - 1 = 3
+      // If txindex = 5, workindex = 5 - 1 = 4
       workindex =
         txindex % workLimit ? (txindex % workLimit) - 1 : workLimit - 1;
       searchIndex = txindex - workindex;
       isFork = false;
       //claim
     }
+
     // Generate filter options
     const options = {
       filter: {
         txindex: searchIndex,
-        chainId: chain
+        chainId: chain,
       },
-      fromBlock: "0"
+      fromBlock: "0",
     };
     console.log("searchIndex =", searchIndex);
     console.log("isFork =", isFork);
     console.log("workindex =", workindex);
-    sourceContract.getPastEvents(
-      "newTransfer",
-      options,
-      async (err, events) => {
-        if (err) {
-          console.log(err);
-          return;
-        }
-        if (events.length === 0) {
-          console.log("no txindex info");
-          return;
-        }
-        tx = events[0].returnValues.hashOnion;
-        await sendTransaction.send(
-          Number(chain),
-          dest,
-          amountToSend,
-          fee,
-          tx,
-          0,
-          workindex,
-          isFork
-        );
+
+    try {
+      const events = await sourceContract.getPastEvents("newTransfer", options);
+
+      if (events.length === 0) {
+        console.log("no txindex info");
+        return;
       }
-    );
+
+      tx = events[0].returnValues.hashOnion;
+    } catch (err) {
+      console.log(err);
+      return;
+    }
   }
+
+  await sendTransaction.send(
+    Number(chain),
+    dest,
+    amountToSend,
+    fee,
+    tx,
+    0,
+    workindex,
+    isFork
+  );
+
+  // When workindex = worklimit - 1, deposit current zFork
+}
+
+async function depositZFork(forkKey) {
+  // depositWithOneFork
 }
 
 function getTime() {
