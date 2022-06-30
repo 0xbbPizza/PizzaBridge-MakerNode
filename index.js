@@ -4,6 +4,8 @@ const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 const config = require("./config");
 var sd = require("silly-datetime");
 const sendTransaction = require("./sendTransaction");
+const ethers = require("ethers");
+const { sleep } = require("zksync/build/utils");
 
 var web3List = [];
 
@@ -220,25 +222,70 @@ async function doDest(sourceContract, value) {
     }
   }
 
-  await sendTransaction.send(
-    Number(chain),
-    dest,
-    amountToSend,
-    fee,
-    tx,
-    0,
-    workindex,
-    isFork
-  );
+  // await sendTransaction.send(
+  //   Number(chain),
+  //   dest,
+  //   amountToSend,
+  //   fee,
+  //   tx,
+  //   0,
+  //   workindex,
+  //   isFork
+  // );
 
-  // When workindex = worklimit - 1, deposit current zFork
+  // When workindex == worklimit - 1, deposit current zFork
+  // if (workindex == workLimit - 1) {
+  const forkKey = generateForkKey(chain, tx);
+  depositZFork(chain, forkKey);
+  // }
 }
 
-async function depositZFork(forkKey) {
+async function depositZFork(toChainId, forkKey) {
   // depositWithOneFork
+  // depositWithOneFork
+
+  const provider = new ethers.providers.JsonRpcProvider(
+    config[toChainId].httpEndPoint
+  );
+  const singer = new ethers.Wallet(config.privatekey, provider);
+  const destContract = new ethers.Contract(
+    config.destDic[toChainId],
+    config.destABI,
+    singer
+  );
+
+  await destContract.depositWithOneFork(forkKey);
+
+  // Invoke earlyBond at 10min after
+  await sleep(10 * 60 * 1000);
+
+//   function earlyBond(
+//     uint256 chainId,
+//     bytes32 prevForkKey,
+//     bytes32 forkKey,
+//     Data.TransferData[] calldata _transferDatas,
+//     address[] calldata _committers
+// ) external
+  await destContract.earlyBond(toChainId)
 }
 
 function getTime() {
   var time = sd.format(new Date(), "YYYY-MM-DD HH:mm:ss");
   return time;
+}
+
+/**
+ * Generate fork's key
+ * @param chainId
+ * @param hashOnion
+ * @param index
+ * @returns
+ */
+function generateForkKey(chainId, hashOnion, index = 0) {
+  return ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      ["uint256", "bytes32", "uint16"],
+      [chainId, hashOnion, index]
+    )
+  );
 }

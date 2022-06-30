@@ -41,12 +41,12 @@ module.exports = {
       inputs: [
         {
           internalType: "address",
-          name: "_tokenAddress",
+          name: "tokenAddress_",
           type: "address",
         },
         {
           internalType: "address",
-          name: "_dockAddr",
+          name: "dockAddr_",
           type: "address",
         },
       ],
@@ -188,17 +188,12 @@ module.exports = {
     {
       inputs: [
         {
-          internalType: "uint256",
-          name: "chainId",
-          type: "uint256",
-        },
-        {
-          internalType: "uint256",
-          name: "forkKeyNum",
-          type: "uint256",
+          internalType: "address",
+          name: "pTokenAddress_",
+          type: "address",
         },
       ],
-      name: "blockDepositOneFork",
+      name: "bindPTokenAddress",
       outputs: [],
       stateMutability: "nonpayable",
       type: "function",
@@ -337,17 +332,12 @@ module.exports = {
     {
       inputs: [
         {
-          internalType: "uint256",
-          name: "chainId",
-          type: "uint256",
-        },
-        {
-          internalType: "uint256",
-          name: "forkKeyNum",
-          type: "uint256",
+          internalType: "bytes32",
+          name: "forkKey",
+          type: "bytes32",
         },
       ],
-      name: "creatPToken",
+      name: "denyDepositOneFork",
       outputs: [],
       stateMutability: "nonpayable",
       type: "function",
@@ -359,6 +349,68 @@ module.exports = {
           name: "chainId",
           type: "uint256",
         },
+        {
+          internalType: "bytes32",
+          name: "_prevForkKey",
+          type: "bytes32",
+        },
+        {
+          components: [
+            {
+              internalType: "uint8",
+              name: "forkIndex",
+              type: "uint8",
+            },
+            {
+              internalType: "bytes32",
+              name: "forkKey",
+              type: "bytes32",
+            },
+            {
+              internalType: "bytes32[]",
+              name: "wrongtxHash",
+              type: "bytes32[]",
+            },
+          ],
+          internalType: "struct Data.MForkData[]",
+          name: "_mForkDatas",
+          type: "tuple[]",
+        },
+        {
+          components: [
+            {
+              internalType: "address",
+              name: "destination",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "fee",
+              type: "uint256",
+            },
+          ],
+          internalType: "struct Data.TransferData[]",
+          name: "_transferDatas",
+          type: "tuple[]",
+        },
+        {
+          internalType: "address[]",
+          name: "_committers",
+          type: "address[]",
+        },
+      ],
+      name: "depositMForks",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
         {
           internalType: "bytes32",
           name: "forkKey",
@@ -377,8 +429,33 @@ module.exports = {
           name: "chainId",
           type: "uint256",
         },
+        {
+          internalType: "bytes32",
+          name: "prevForkKey",
+          type: "bytes32",
+        },
+        {
+          internalType: "bytes32",
+          name: "forkKey",
+          type: "bytes32",
+        },
+        {
+          internalType: "bytes32",
+          name: "forkTxHash",
+          type: "bytes32",
+        },
+        {
+          internalType: "bytes32[]",
+          name: "wrongForkKeys",
+          type: "bytes32[]",
+        },
+        {
+          internalType: "bytes32[]",
+          name: "wrongForkTxHashs",
+          type: "bytes32[]",
+        },
       ],
-      name: "depositwithMutiMFork",
+      name: "disputeSolve",
       outputs: [],
       stateMutability: "nonpayable",
       type: "function",
@@ -405,19 +482,74 @@ module.exports = {
         },
         {
           internalType: "bytes32",
+          name: "prevForkKey",
+          type: "bytes32",
+        },
+        {
+          internalType: "bytes32",
+          name: "forkKey",
+          type: "bytes32",
+        },
+        {
+          components: [
+            {
+              internalType: "address",
+              name: "destination",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "fee",
+              type: "uint256",
+            },
+          ],
+          internalType: "struct Data.TransferData[]",
+          name: "_transferDatas",
+          type: "tuple[]",
+        },
+        {
+          internalType: "address[]",
+          name: "_committers",
+          type: "address[]",
+        },
+      ],
+      name: "earlyBond",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "uint256",
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          internalType: "bytes32",
           name: "hashOnion",
           type: "bytes32",
         },
         {
-          internalType: "uint8",
+          internalType: "uint16",
           name: "index",
-          type: "uint8",
+          type: "uint16",
         },
       ],
       name: "getHashOnionFork",
       outputs: [
         {
           components: [
+            {
+              internalType: "uint16",
+              name: "workIndex",
+              type: "uint16",
+            },
             {
               internalType: "bytes32",
               name: "onionHead",
@@ -447,6 +579,11 @@ module.exports = {
               internalType: "bool",
               name: "needBond",
               type: "bool",
+            },
+            {
+              internalType: "uint8",
+              name: "verifyStatus",
+              type: "uint8",
             },
           ],
           internalType: "struct Fork.Info",
@@ -499,6 +636,11 @@ module.exports = {
       name: "hashOnionForks",
       outputs: [
         {
+          internalType: "uint16",
+          name: "workIndex",
+          type: "uint16",
+        },
+        {
           internalType: "bytes32",
           name: "onionHead",
           type: "bytes32",
@@ -528,6 +670,11 @@ module.exports = {
           name: "needBond",
           type: "bool",
         },
+        {
+          internalType: "uint8",
+          name: "verifyStatus",
+          type: "uint8",
+        },
       ],
       stateMutability: "view",
       type: "function",
@@ -550,9 +697,9 @@ module.exports = {
           type: "bytes32",
         },
         {
-          internalType: "uint8",
+          internalType: "uint16",
           name: "_index",
-          type: "uint8",
+          type: "uint16",
         },
         {
           components: [
@@ -588,73 +735,6 @@ module.exports = {
       type: "function",
     },
     {
-      inputs: [
-        {
-          internalType: "uint256",
-          name: "chainId",
-          type: "uint256",
-        },
-        {
-          internalType: "bytes32",
-          name: "preWorkForkKey",
-          type: "bytes32",
-        },
-        {
-          components: [
-            {
-              internalType: "uint8",
-              name: "forkIndex",
-              type: "uint8",
-            },
-            {
-              internalType: "bytes32",
-              name: "forkKey",
-              type: "bytes32",
-            },
-            {
-              internalType: "bytes32[]",
-              name: "wrongtxHash",
-              type: "bytes32[]",
-            },
-          ],
-          internalType: "struct Data.MForkData[]",
-          name: "_mForkDatas",
-          type: "tuple[]",
-        },
-        {
-          components: [
-            {
-              internalType: "address",
-              name: "destination",
-              type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "amount",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "fee",
-              type: "uint256",
-            },
-          ],
-          internalType: "struct Data.TransferData[]",
-          name: "_transferDatas",
-          type: "tuple[]",
-        },
-        {
-          internalType: "address[]",
-          name: "_commiters",
-          type: "address[]",
-        },
-      ],
-      name: "mbond",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-    {
       inputs: [],
       name: "owner",
       outputs: [
@@ -669,48 +749,20 @@ module.exports = {
     },
     {
       inputs: [],
+      name: "pTokenAddress",
+      outputs: [
+        {
+          internalType: "address",
+          name: "",
+          type: "address",
+        },
+      ],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [],
       name: "renounceOwnership",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-    {
-      inputs: [
-        {
-          internalType: "uint256",
-          name: "chainId",
-          type: "uint256",
-        },
-        {
-          internalType: "bytes32",
-          name: "onion",
-          type: "bytes32",
-        },
-        {
-          internalType: "bool",
-          name: "equal",
-          type: "bool",
-        },
-      ],
-      name: "setOnWorkHashOnion",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-    {
-      inputs: [
-        {
-          internalType: "uint256",
-          name: "chainId",
-          type: "uint256",
-        },
-        {
-          internalType: "uint256",
-          name: "forkKeyNum",
-          type: "uint256",
-        },
-      ],
-      name: "settlement",
       outputs: [],
       stateMutability: "nonpayable",
       type: "function",
@@ -775,12 +827,12 @@ module.exports = {
         },
         {
           internalType: "bytes32",
-          name: "hashOnion",
+          name: "prevForkKey",
           type: "bytes32",
         },
         {
           internalType: "bytes32",
-          name: "_preHashOnion",
+          name: "forkKey",
           type: "bytes32",
         },
         {
@@ -807,7 +859,7 @@ module.exports = {
         },
         {
           internalType: "address[]",
-          name: "_commiters",
+          name: "_committers",
           type: "address[]",
         },
       ],
