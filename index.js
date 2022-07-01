@@ -12,6 +12,11 @@ var web3List = [];
 var hashArray = [];
 
 const workLimit = 5;
+const bondParams = {
+  prevForkKey: "",
+  _transferDatas: [],
+  _committers: [],
+};
 
 testExpress();
 
@@ -222,27 +227,41 @@ async function doDest(sourceContract, value) {
     }
   }
 
-  // await sendTransaction.send(
-  //   Number(chain),
-  //   dest,
-  //   amountToSend,
-  //   fee,
-  //   tx,
-  //   0,
-  //   workindex,
-  //   isFork
-  // );
+  await sendTransaction.send(
+    Number(chain),
+    dest,
+    amountToSend,
+    fee,
+    tx,
+    0,
+    workindex,
+    isFork
+  );
+
+  bondParams._transferDatas.push({
+    destination: dest,
+    amount: amountToSend,
+    fee: fee,
+  });
+  bondParams._committers.push(config.makerAddress);
 
   // When workindex == worklimit - 1, deposit current zFork
-  // if (workindex == workLimit - 1) {
-  const forkKey = generateForkKey(chain, tx);
-  depositZFork(chain, forkKey);
-  // }
+  if (workindex == workLimit - 1) {
+    const forkKey = generateForkKey(chain, tx);
+    console.warn("tx >>>>>> ", tx);
+    console.warn("forkKey >>>>>> ", forkKey);
+
+    await depositZFork(chain, forkKey);
+
+    bondParams.prevForkKey = forkKey;
+    bondParams._transferDatas = [];
+    bondParams._committers = [];
+  }
 }
 
 async function depositZFork(toChainId, forkKey) {
-  // depositWithOneFork
-  // depositWithOneFork
+  // Deep copy bondParams
+  const currentBondParams = JSON.parse(JSON.stringify(bondParams));
 
   const provider = new ethers.providers.JsonRpcProvider(
     config[toChainId].httpEndPoint
@@ -254,19 +273,45 @@ async function depositZFork(toChainId, forkKey) {
     singer
   );
 
-  await destContract.depositWithOneFork(forkKey);
+  // Approve
+  await erc20Approve(
+    singer,
+    config.tokenDic[toChainId],
+    config.destDic[toChainId]
+  );
 
-  // Invoke earlyBond at 10min after
-  await sleep(10 * 60 * 1000);
+  const respDeposit = await destContract.depositWithOneFork(forkKey);
+  console.log("respDeposit ::: ", respDeposit);
 
-//   function earlyBond(
-//     uint256 chainId,
-//     bytes32 prevForkKey,
-//     bytes32 forkKey,
-//     Data.TransferData[] calldata _transferDatas,
-//     address[] calldata _committers
-// ) external
-  await destContract.earlyBond(toChainId)
+  if (
+    currentBondParams.prevForkKey == "" ||
+    currentBondParams._transferDatas.length != workLimit ||
+    currentBondParams._committers.length != workLimit
+  ) {
+    return;
+  }
+
+  // EarlyBond in backgroup
+  (async () => {
+    // Invoke earlyBond every 1 minute
+    const startTime = new Date().getTime();
+    while (new Date().getTime() - startTime < 600000) {
+      try {
+        console.warn("EarlyBond:::", new Date());
+        await sleep(60 * 1000);
+        const { hash } = await destContract.earlyBond(
+          toChainId,
+          currentBondParams.prevForkKey,
+          forkKey,
+          currentBondParams._transferDatas,
+          currentBondParams._committers
+        );
+        console.warn('EarlyBond hash: ', hash);
+      } catch (err) {
+        console.error("EarlyBond failed: " + err.message);
+      }
+    }
+  })();
 }
 
 function getTime() {
@@ -275,10 +320,32 @@ function getTime() {
 }
 
 /**
+ * @param {ethers.Signer} singer
+ * @param {string} addressOrName
+ * @param {string} spender
+ */
+async function erc20Approve(singer, addressOrName, spender) {
+  const tokenContract = new ethers.Contract(
+    addressOrName,
+    config.tokenABI,
+    singer
+  );
+
+  const allowance = await tokenContract.allowance(
+    await singer.getAddress(),
+    spender
+  );
+  console.warn("allowance:::", allowance + "");
+  if (allowance.lte(ethers.utils.parseEther("10"))) {
+    await tokenContract.approve(spender, ethers.constants.MaxUint256);
+  }
+}
+
+/**
  * Generate fork's key
- * @param chainId
- * @param hashOnion
- * @param index
+ * @param {number} chainId
+ * @param {string} hashOnion
+ * @param {number} index
  * @returns
  */
 function generateForkKey(chainId, hashOnion, index = 0) {
