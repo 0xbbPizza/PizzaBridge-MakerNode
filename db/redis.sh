@@ -2,7 +2,6 @@
 ########## Define variables ##########
 home_dir='/usr/local/redis/redisDAI'
 redis_passwd=@redisPass123456
-pid_file =/var/run/redis_6379.pid
 ############## conf files ##################
 mkdir ${home_dir} -p
 mkdir ${home_dir}/conf ${home_dir}/data ${home_dir}/logs -p
@@ -16,7 +15,7 @@ timeout 0
 tcp-keepalive 300
 daemonize no
 supervised no
-pidfile ${pid_file}
+pidfile /var/run/redis_6379.pid
 # loglevel verbose
 # logfile /logs/redis.log
 databases 16
