@@ -2,24 +2,20 @@ const dotenv = require("dotenv");
 dotenv.config();
 const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 const config = require("./config");
-var sd = require("silly-datetime");
+let sd = require("silly-datetime");
 const sendTransaction = require("./sendTransaction");
 const ethers = require("ethers");
 const { sleep } = require("zksync/build/utils");
-
-var web3List = [];
-
-var hashArray = [];
-
+const axios = require("axios");
+const { server } = require('./router/index')
+const { addUserOrRevenue } = require('./userRevenue')
+const { saveConfig, getConfig } = require('./configSave')
+let web3List = [];
+let hashArray = {};
+let bondParams = {};
+let bondParamsAndHashKey = 'bondParamsAndHashConifg'
 const workLimit = 5;
-const bondParams = {
-  prevForkKey: "",
-  _transferDatas: [],
-  _committers: [],
-};
-
 testExpress();
-
 function test() {
   let chain = 22;
   let toChain = 5;
@@ -38,9 +34,9 @@ function test() {
   const options = {
     filter: {
       txindex: 1,
-      chainId: toChain,
+      chainId: toChain
     },
-    fromBlock: "0",
+    fromBlock: "0"
   };
 
   sourceContract.getPastEvents("newTransfer", options, async (err, events) => {
@@ -79,12 +75,21 @@ function test() {
 async function testExpress() {
   // test();
   try {
-    await sendTransaction.becomeCommit(5);
-    await sendTransaction.becomeCommit(22);
-    await sendTransaction.becomeCommit(77);
-  } catch (error) {
-    console.error("commiter_error =", error);
-    return;
+    server()
+  } catch (err) {
+    console.log('server', err);
+  }
+  let status = true
+  while (status) {
+    try {
+      await sendTransaction.becomeCommit(5);
+      await sendTransaction.becomeCommit(22);
+      status = false
+      console.log('status', status)
+    } catch (error) {
+      console.error("commiter_error =", error);
+      // return;
+    }
   }
   startMaker();
 }
@@ -97,7 +102,7 @@ function stopMaker() {
   web3List.splice(0, web3List.length);
   return "stop Maker";
 }
-function startMaker() {
+async function startMaker() {
   if (web3List.length !== 0) {
     for (let index = 0; index < web3List.length; index++) {
       const web3 = web3List[index];
@@ -105,19 +110,45 @@ function startMaker() {
     }
   }
   var sourceKeyList = Object.keys(config.sourceDic);
+  let doInitBondParams = false
+  try {
+    let saveData = await getConfig(bondParamsAndHashKey)
+    console.log('saveData', saveData);
+    if (saveData === null) {
+      doInitBondParams = true
+    } else {
+      bondParams = saveData.bondParams
+      hashArray = saveData.hashArray
+    }
+  } catch (error) {
+    console.log('getConfig error ==> ', error);
+
+  }
 
   for (let index = 0; index < sourceKeyList.length; index++) {
     const chain = sourceKeyList[index];
     const contractAddress = config.sourceDic[chain];
+    const dTokenAddress = config.dTokenDic[chain]
+    const coinAddress = config.tokenDic[chain]
     const providers = config[chain];
-    watchPool(contractAddress, providers, chain, true);
+    if (doInitBondParams) {
+      let tmpHashArray = []
+      hashArray[chain] = tmpHashArray
+      let tmpBondParams = {
+        prevForkKey: "",
+        _transferDatas: [],
+        _committers: [],
+      }
+      bondParams[chain] = tmpBondParams
+    }
+    watchPool(contractAddress, dTokenAddress, coinAddress, providers, chain, true);
   }
   return "start Maker";
 }
-function watchPool(address, providers, chain, isSource) {
+function watchPool(sourceAddress, dTokenAddress, coinAddress, providers, chain, isSource) {
   // Instantiate web3 with WebSocketProvider
   let wsEndPoint = providers.wsEndPoint;
-  let contractAddress = address;
+  let contractAddress = sourceAddress;
 
   const web3 = createAlchemyWeb3(wsEndPoint);
 
@@ -131,14 +162,34 @@ function watchPool(address, providers, chain, isSource) {
         if (error) console.log(error);
       }
     );
+    const dTokenContract = new web3.eth.Contract(
+      config.dTokenABI,
+      dTokenAddress,
+      (error, result) => {
+        if (error) console.log(error);
+      }
+    )
+    const coinContract = new web3.eth.Contract(
+      config.tokenABI,
+      coinAddress,
+      (error, result) => {
+        if (error) console.log(error);
+      }
+    )
     // Generate filter options
-    const options = {
-      fromBlock: "latest",
+    const sourceOptions = {
+      fromBlock: "latest"
     };
+    const dTokenOptions = {
+      fromBlock: "latest",
+    }
+    const coinOptions = {
+      fromBlock: "latest",
+    }
 
     // Subscribe to Transfer events matching filter criteria
     sourceContract.events
-      .newTransfer(options, async (error, event) => {
+      .newTransfer(sourceOptions, async (error, event) => {
         if (error) {
           console.log("source_wsEndPoint =", wsEndPoint);
           console.log(error);
@@ -157,11 +208,82 @@ function watchPool(address, providers, chain, isSource) {
           chain
         );
       });
+
+    dTokenContract.events
+      .Transfer(dTokenOptions, async (error, event) => {
+        if (error) {
+          console.log("source_wsEndPoint =", wsEndPoint);
+          console.log(error);
+          return;
+        }
+        doDToken(dTokenContract, event)
+        return;
+      })
+      .on("connected", async function (subscriptionId) {
+        console.log(
+          "dToken_subscriptionId =",
+          subscriptionId,
+          " time =",
+          getTime(),
+          "chain =",
+          chain
+        );
+      });
+
+    coinContract.events
+      .Transfer(coinOptions, async (error, event) => {
+        if (error) {
+          console.log("source_wsEndPoint =", wsEndPoint);
+          console.log(error);
+          return;
+        }
+        doDToken(null, event)
+        return;
+      })
+      .on("connected", async function (subscriptionId) {
+        console.log(
+          "coin_subscriptionId =",
+          subscriptionId,
+          " time =",
+          getTime(),
+          "chain =",
+          chain
+        );
+      });
   }
 }
 
-// function doDest(sourceContract, value) {
+/**
+ * 
+ * @param  dTokenContract 1.from coinContract:null  2.from dTokenContract:dTokenContract
+ * @param  value event
+ */
+async function doDToken(dTokenContract, value) {
+  let fromAddress = value.returnValues.from
+  let toAddress = value.returnValues.to
+  let amount = value.returnValues.value
+  let dTokenAddress = dTokenContract !== null ? dTokenContract._address : fromAddress
+  let destAddress = null
+  let chain = Object.entries(config.dTokenDic).find((item) => item[1] == dTokenAddress)
+  if (chain !== undefined) {
+    chain = chain[0]
+    destAddress = config.destDic[chain]
+    if (dTokenContract === null) {
+      let provider = new ethers.providers.JsonRpcProvider(
+        config[chain].httpEndPoint
+      );
+      dTokenContract = new ethers.Contract(
+        dTokenAddress,
+        config.dTokenABI,
+        provider
+      );
+    }
+    await addUserOrRevenue(fromAddress, toAddress, dTokenAddress, destAddress, amount, dTokenContract)
+  }
+}
+
 async function doDest(sourceContract, value) {
+
   console.log("returnValue =", value);
 
   let amountToSend = value.returnValues.amount;
@@ -173,10 +295,10 @@ async function doDest(sourceContract, value) {
   let isFork = true;
   let workindex = 0;
 
-  if (hashArray.indexOf(value.transactionHash) !== -1) {
+  if (hashArray[chain].indexOf(value.transactionHash) !== -1) {
     return;
   }
-  hashArray.push(value.transactionHash);
+  hashArray[chain].push(value.transactionHash);
   console.log("txindex =", txindex);
   console.log("amountToSend =", amountToSend);
   console.log("dest =", dest);
@@ -208,22 +330,21 @@ async function doDest(sourceContract, value) {
       },
       fromBlock: "0",
     };
+
     console.log("searchIndex =", searchIndex);
     console.log("isFork =", isFork);
     console.log("workindex =", workindex);
-
     try {
       const events = await sourceContract.getPastEvents("newTransfer", options);
-
+      console.log('events.length ==', events.length);
       if (events.length === 0) {
         console.log("no txindex info");
         return;
       }
-
       tx = events[0].returnValues.hashOnion;
     } catch (err) {
       console.log(err);
-      return;
+      return
     }
   }
 
@@ -238,30 +359,51 @@ async function doDest(sourceContract, value) {
     isFork
   );
 
-  bondParams._transferDatas.push({
+  bondParams[chain]._transferDatas.push({
     destination: dest,
     amount: amountToSend,
     fee: fee,
   });
-  bondParams._committers.push(config.makerAddress);
+  bondParams[chain]._committers.push(config.makerAddress);
+
+  try {
+    let data = { bondParams, hashArray }
+    await saveConfig(bondParamsAndHashKey, data)
+  } catch (error) {
+    console.log('bondParamsConifg error ==> ', error);
+  }
 
   // When workindex == worklimit - 1, deposit current zFork
   if (workindex == workLimit - 1) {
+    if (bondParams[chain].prevForkKey === "") {
+      let currentHashOnion = ethers.constants.HashZero;
+      bondParams[chain].prevForkKey = generateForkKey(chain, currentHashOnion)
+    }
+
     const forkKey = generateForkKey(chain, tx);
     console.warn("tx >>>>>> ", tx);
     console.warn("forkKey >>>>>> ", forkKey);
+    console.warn("prevForkKey >>>>>>", bondParams[chain].prevForkKey)
+
 
     await depositZFork(chain, forkKey);
 
-    bondParams.prevForkKey = forkKey;
-    bondParams._transferDatas = [];
-    bondParams._committers = [];
+    bondParams[chain].prevForkKey = forkKey;
+    bondParams[chain]._transferDatas = [];
+    bondParams[chain]._committers = [];
+
+    try {
+      let data = { bondParams, hashArray }
+      await saveConfig(bondParamsAndHashKey, data)
+    } catch (error) {
+      console.log('bondParamsConifg second error ==> ', error);
+    }
   }
 }
 
 async function depositZFork(toChainId, forkKey) {
   // Deep copy bondParams
-  const currentBondParams = JSON.parse(JSON.stringify(bondParams));
+  const currentBondParams = JSON.parse(JSON.stringify(bondParams[toChainId]));
 
   const provider = new ethers.providers.JsonRpcProvider(
     config[toChainId].httpEndPoint
@@ -280,7 +422,7 @@ async function depositZFork(toChainId, forkKey) {
     config.destDic[toChainId]
   );
 
-  const respDeposit = await destContract.depositWithOneFork(forkKey);
+  const respDeposit = await destContract.depositWithOneFork(forkKey, await getPolygonMumbaiFastPerGas());
   console.log("respDeposit ::: ", respDeposit);
 
   if (
@@ -288,30 +430,38 @@ async function depositZFork(toChainId, forkKey) {
     currentBondParams._transferDatas.length != workLimit ||
     currentBondParams._committers.length != workLimit
   ) {
+    console.log('currentBondParams.prevForkKey ===> ', currentBondParams.prevForkKey);
+    console.log('currentBondParams._transferDatas.length ===> ', currentBondParams._transferDatas.length);
+    console.log('currentBondParams._committers.length ===> ', currentBondParams._committers.length);
     return;
   }
 
-  // EarlyBond in backgroup
-  (async () => {
-    // Invoke earlyBond every 1 minute
-    const startTime = new Date().getTime();
-    while (new Date().getTime() - startTime < 600000) {
-      try {
-        console.warn("EarlyBond:::", new Date());
-        await sleep(60 * 1000);
-        const { hash } = await destContract.earlyBond(
-          toChainId,
-          currentBondParams.prevForkKey,
-          forkKey,
-          currentBondParams._transferDatas,
-          currentBondParams._committers
-        );
-        console.warn('EarlyBond hash: ', hash);
-      } catch (err) {
-        console.error("EarlyBond failed: " + err.message);
-      }
+  await earlyBond(toChainId, forkKey, destContract, currentBondParams)
+}
+
+// EarlyBond in backgroup
+async function earlyBond(toChainId, forkKey, destContract, currentBondParams) {
+  // Wait a minute
+  await sleep(60 * 1000);
+  // Invoke earlyBond every 1 minute
+  const startTime = new Date().getTime();
+  while (new Date().getTime() - startTime < 300000) {
+    try {
+      console.warn("EarlyBond:::", new Date());
+      await sleep(60 * 1000);
+      const { hash } = await destContract.earlyBond(
+        toChainId,
+        currentBondParams.prevForkKey,
+        forkKey,
+        currentBondParams._transferDatas,
+        currentBondParams._committers,
+        await getPolygonMumbaiFastPerGas()
+      );
+      console.warn('EarlyBond hash: ', hash);
+    } catch (err) {
+      console.error("EarlyBond failed: " + err.message);
     }
-  })();
+  }
 }
 
 function getTime() {
@@ -356,3 +506,20 @@ function generateForkKey(chainId, hashOnion, index = 0) {
     )
   );
 }
+
+async function getPolygonMumbaiFastPerGas() {
+  const response = await axios.get(
+    'https://gasstation-mumbai.matic.today/v2'
+  )
+  const data = await response.data
+  const fastPerGas = Math.trunc(data['fast']['maxFee'] * 10 ** 9)
+  const options = {
+    gasLimit: 3000000,
+    maxPriorityFeePerGas: fastPerGas,
+    maxFeePerGas: fastPerGas,
+  }
+  return options
+}
+
+
+

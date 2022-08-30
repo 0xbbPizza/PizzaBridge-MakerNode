@@ -46,12 +46,12 @@ const getCurrentGasPrices = async (chain) => {
       console.log("gasPrice =", response.data.result);
       return response.data.result;
     }
-    return web3.utils.toHex(
-      web3.utils.toWei(config[chain].gasPrice.toString(), "gwei")
+    return Web3.utils.toHex(
+      Web3.utils.toWei(config[chain].gasPrice.toString(), "gwei")
     );
   } catch (error) {
-    return web3.utils.toHex(
-      web3.utils.toWei(config[chain].gasPrice.toString(), "gwei")
+    return Web3.utils.toHex(
+      Web3.utils.toWei(config[chain].gasPrice.toString(), "gwei")
     );
   }
 };

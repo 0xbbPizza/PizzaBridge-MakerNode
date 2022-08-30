@@ -1,33 +1,53 @@
-version: '3.8'
+version: "3.8"
 services:
   backend:
     build: . # Build image from local Dockerfile
     command: bash -c 'while !</dev/tcp/db/3306; do sleep 2; done; npm start'
     environment:
       DB_HOST: db
-      DB_PORT: '${DB_PORT}'
-      DB_USER: '${DB_USER}'
-      DB_PASSWORD: '${DB_PASS}'
-      DB_NAME: '${DB_NAME}'
+      DB_PORT: "${DB_PORT}"
+      DB_USER: "${DB_USER}"
+      DB_PASSWORD: "${DB_PASS}"
+      DB_NAME: "${DB_NAME}"
     ports:
-      - '3000:3000' # Expose port 3000 on host
+      - "3000:3000" # Expose port 3000 on  host
     depends_on:
       - db # Wait until database service is loaded
+      - redis
     restart: always
     networks:
       - app-network
+
   db:
     image: mysql:5.7
     environment:
-      MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASS}'
-      MYSQL_DATABASE: '${DB_NAME}'
-      MYSQL_USER: '${DB_USER}'
-      MYSQL_PASSWORD: '${DB_PASS}'
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASS}"
+      MYSQL_DATABASE: "${DB_NAME}"
+      MYSQL_USER: "${DB_USER}"
+      MYSQL_PASSWORD: "${DB_PASS}"
     expose:
-      - '3306'
+      - "3306"
     restart: always
     networks:
       - app-network
-networks: # Specify the network for bridging
+
+  redis:
+    image: redis
+    restart: always
+    privileged: true
+    expose:
+      - "6379"
+    environment:
+      TZ: Asia/Shanghai
+      LANG: en_US.UTF-8
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+    volumes:
+      - ${REDIS_PATH}/data:/data:rw
+      - ${REDIS_PATH}/conf/redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    networks:
+      - app-network
+
+networks:
   app-network:
     driver: bridge
