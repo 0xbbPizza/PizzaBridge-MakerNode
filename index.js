@@ -8,7 +8,7 @@ const ethers = require("ethers");
 const { sleep } = require("zksync/build/utils");
 const axios = require("axios");
 const { server } = require('./router/index')
-const { addUserOrRevenue } = require('./userRevenue')
+const { addUserOrRevenue, setRevenueFlag, getRevenueFlag } = require('./userRevenue')
 const { saveConfig, getConfig } = require('./configSave')
 let web3List = [];
 let hashArray = {};
@@ -223,7 +223,7 @@ function watchPool(sourceAddress, dTokenAddress, coinAddress, providers, chain, 
           console.log(error);
           return;
         }
-        doDToken(dTokenContract, event)
+        doDToken(dTokenContract, null, event)
         return;
       })
       .on("connected", async function (subscriptionId) {
@@ -244,7 +244,7 @@ function watchPool(sourceAddress, dTokenAddress, coinAddress, providers, chain, 
           console.log(error);
           return;
         }
-        doDToken(null, event)
+        doDToken(null, null, event)
         return;
       })
       .on("connected", async function (subscriptionId) {
@@ -263,31 +263,36 @@ function watchPool(sourceAddress, dTokenAddress, coinAddress, providers, chain, 
 /**
  * 
  * @param  dTokenContract 1.from coinContract:null  2.from dTokenContract:dTokenContract
+ * @param  toChainId 1.from event:null  2.from hand:chainId
  * @param  value event
  */
-async function doDToken(dTokenContract, value) {
-  let fromAddress = value.returnValues.from
-  let toAddress = value.returnValues.to
-  let amount = value.returnValues.value
-  let dTokenAddress = dTokenContract !== null ? dTokenContract._address : fromAddress
-  let destAddress = null
-  let chain = Object.entries(config.dTokenDic).find((item) => item[1] === dTokenAddress)
-  console.log('chain: ', chain);
-  if (chain !== undefined) {
-    chain = chain[0]
+async function doDToken(dTokenContract, toChainId, value) {
+  let fromAddress, toAddress, amount, dTokenAddress, destAddress, chain = null
+  if (toChainId === null) {
+    fromAddress = value.returnValues.from
+    toAddress = value.returnValues.to
+    amount = value.returnValues.value
+    dTokenAddress = dTokenContract !== null ? dTokenContract._address : fromAddress
+    destAddress = null
+    chain = Object.entries(config.dTokenDic).find((item) => item[1] === dTokenAddress)[0]
     destAddress = config.destDic[chain]
-    if (dTokenContract === null) {
-      let provider = new ethers.providers.JsonRpcProvider(
-        config[chain].httpEndPoint
-      );
-      dTokenContract = new ethers.Contract(
-        dTokenAddress,
-        config.dTokenABI,
-        provider
-      );
-    }
-    await addUserOrRevenue(fromAddress, toAddress, dTokenAddress, destAddress, amount, dTokenContract)
+  } else {
+    chain = toChainId
+    fromAddress, dTokenAddress = config.dTokenDic[chain]
+    toAddress, destAddress = config.destDic[chain]
+    amount = ethers.BigNumber.from(0)
   }
+  if (dTokenContract === null) {
+    let provider = new ethers.providers.JsonRpcProvider(
+      config[chain].httpEndPoint
+    );
+    dTokenContract = new ethers.Contract(
+      dTokenAddress,
+      config.dTokenABI,
+      provider
+    );
+  }
+  await addUserOrRevenue(fromAddress, toAddress, dTokenAddress, destAddress, amount, dTokenContract, chain)
 }
 
 async function doDest(sourceContract, value) {
@@ -444,16 +449,25 @@ async function depositZFork(toChainId, forkKey) {
     return;
   }
 
-  await earlyBond(toChainId, forkKey, destContract, currentBondParams)
+  const min = 5
+
+  await earlyBond(toChainId, forkKey, destContract, currentBondParams, min)
+
+  let revenueSatus = await getRevenueFlag(toChainId, min + 1)
+  if (revenueSatus === false) {
+    await doDToken(null, toChainId, null)
+    console.log('Refresh user revenue manually succeeded');
+  }
 }
 
 // EarlyBond in backgroup
-async function earlyBond(toChainId, forkKey, destContract, currentBondParams) {
+async function earlyBond(toChainId, forkKey, destContract, currentBondParams, min) {
   // Wait a minute
   await sleep(60 * 1000);
   // Invoke earlyBond every 1 minute
   const startTime = new Date().getTime();
-  while (new Date().getTime() - startTime < 300000) {
+  const endTime = 60000 * min
+  while (new Date().getTime() - startTime < endTime) {
     try {
       console.warn("EarlyBond:::", new Date());
       await sleep(60 * 1000);
