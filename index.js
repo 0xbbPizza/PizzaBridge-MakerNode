@@ -182,9 +182,16 @@ function watchPool(sourceAddress, dTokenAddress, coinAddress, providers, chain, 
     };
     const dTokenOptions = {
       fromBlock: "latest",
+      filter: {
+        from: ethers.constants.AddressZero
+      }
     }
     const coinOptions = {
       fromBlock: "latest",
+      filter: {
+        from: Object.values(config.dTokenDic),
+        to: Object.values(config.destDic)
+      }
     }
 
     // Subscribe to Transfer events matching filter criteria
@@ -264,7 +271,8 @@ async function doDToken(dTokenContract, value) {
   let amount = value.returnValues.value
   let dTokenAddress = dTokenContract !== null ? dTokenContract._address : fromAddress
   let destAddress = null
-  let chain = Object.entries(config.dTokenDic).find((item) => item[1] == dTokenAddress)
+  let chain = Object.entries(config.dTokenDic).find((item) => item[1] === dTokenAddress)
+  console.log('chain: ', chain);
   if (chain !== undefined) {
     chain = chain[0]
     destAddress = config.destDic[chain]
