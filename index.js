@@ -401,16 +401,6 @@ async function doDest(sourceContract, value) {
 
     await depositZFork(chain, forkKey);
 
-    bondParams[chain].prevForkKey = forkKey;
-    bondParams[chain]._transferDatas = [];
-    bondParams[chain]._committers = [];
-
-    try {
-      let data = { bondParams, hashArray }
-      await saveConfig(bondParamsAndHashKey, data)
-    } catch (error) {
-      console.log('bondParamsConifg second error ==> ', error);
-    }
   }
 }
 
@@ -427,6 +417,17 @@ async function depositZFork(toChainId, forkKey) {
     config.destABI,
     singer
   );
+
+  bondParams[toChainId].prevForkKey = forkKey;
+  bondParams[toChainId]._transferDatas = [];
+  bondParams[toChainId]._committers = [];
+
+  try {
+    let data = { bondParams, hashArray }
+    await saveConfig(bondParamsAndHashKey, data)
+  } catch (error) {
+    console.log('bondParamsConifg second error ==> ', error);
+  }
 
   // Approve
   await erc20Approve(
