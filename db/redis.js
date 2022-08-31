@@ -48,7 +48,7 @@ const redisDB = {
         return await redisClient.rpush(listKey, valueKey)
     },
     async lindex(listKey, index) {
-        return await redisClient.hgetall(listKey, index)
+        return await redisClient.lindex(listKey, index)
     },
 
 }

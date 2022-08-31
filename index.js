@@ -458,6 +458,7 @@ async function depositZFork(toChainId, forkKey) {
     await doDToken(null, toChainId, null)
     console.log('Refresh user revenue manually succeeded');
   }
+  console.log('early Bond succeeded');
 }
 
 // EarlyBond in backgroup
