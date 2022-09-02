@@ -13,6 +13,7 @@ async function addUserOrRevenue(fromAddress, toAddress, dTokenAddress, destAddre
             await redisDB.sadd(KEY, toAddress.toLowerCase())
         } else if (fromAddress === dTokenAddress && toAddress === destAddress) {
             const accountList = await redisDB.smembers(KEY)
+            const decimals = await dTokenContract.decimals()
             for (let i = 0, len = accountList.length; i < len; i++) {
                 const userAddress = accountList[i]
                 const preParams = await getUserRevenue(userAddress, dTokenAddress)
@@ -22,7 +23,7 @@ async function addUserOrRevenue(fromAddress, toAddress, dTokenAddress, destAddre
                 const currentDTokenCash = (await dTokenContract.getCashPrior()).add(amount)
                 const currentRevenue = (
                     (exchangeRate.mul(currentAccountDTokenCash).div(
-                        ethers.utils.parseEther('1')
+                        ethers.utils.parseUnits('1', decimals)
                     ).sub(currentAccountDTokenCash)).mul(currentAccountDTokenCash.div(currentDTokenCash))
                 )
                 const totalRevenue = preRevenue.add(currentRevenue)

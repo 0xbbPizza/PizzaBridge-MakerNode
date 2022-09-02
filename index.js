@@ -515,8 +515,9 @@ async function erc20Approve(singer, addressOrName, spender) {
     await singer.getAddress(),
     spender
   );
+  const decimals = await tokenContract.decimals()
   console.warn("allowance:::", allowance + "");
-  if (allowance.lte(ethers.utils.parseEther("10"))) {
+  if (allowance.lte(ethers.utils.parseUnits("10", decimals))) {
     await tokenContract.approve(spender, ethers.constants.MaxUint256);
   }
 }
