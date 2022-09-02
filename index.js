@@ -8,7 +8,7 @@ const ethers = require("ethers");
 const { sleep } = require("zksync/build/utils");
 const axios = require("axios");
 const { server } = require('./router/index')
-const { addUserOrRevenue, setRevenueFlag, getRevenueFlag } = require('./userRevenue')
+const { addUserOrRevenue, getRevenueFlag } = require('./userRevenue')
 const { saveConfig, getConfig } = require('./configSave')
 let web3List = [];
 let hashArray = {};
@@ -278,8 +278,10 @@ async function doDToken(dTokenContract, toChainId, value) {
     destAddress = config.destDic[chain]
   } else {
     chain = toChainId
-    fromAddress, dTokenAddress = config.dTokenDic[chain]
-    toAddress, destAddress = config.destDic[chain]
+    dTokenAddress = config.dTokenDic[chain]
+    fromAddress = dTokenAddress
+    destAddress = config.destDic[chain]
+    toAddress = destAddress
     amount = ethers.BigNumber.from(0)
   }
   if (dTokenContract === null) {
@@ -398,9 +400,24 @@ async function doDest(sourceContract, value) {
     console.warn("forkKey >>>>>> ", forkKey);
     console.warn("prevForkKey >>>>>>", bondParams[chain].prevForkKey)
 
+    try {
+      await depositZFork(chain, forkKey);
 
-    await depositZFork(chain, forkKey);
+    } catch (error) {
+      console.log('depositZFork error = ', error);
 
+    } finally {
+      bondParams[chain].prevForkKey = forkKey;
+      bondParams[chain]._transferDatas = [];
+      bondParams[chain]._committers = [];
+
+      try {
+        let data = { bondParams, hashArray }
+        await saveConfig(bondParamsAndHashKey, data)
+      } catch (error) {
+        console.log('bondParamsConifg second error ==> ', error);
+      }
+    }
   }
 }
 
@@ -417,17 +434,6 @@ async function depositZFork(toChainId, forkKey) {
     config.destABI,
     singer
   );
-
-  bondParams[toChainId].prevForkKey = forkKey;
-  bondParams[toChainId]._transferDatas = [];
-  bondParams[toChainId]._committers = [];
-
-  try {
-    let data = { bondParams, hashArray }
-    await saveConfig(bondParamsAndHashKey, data)
-  } catch (error) {
-    console.log('bondParamsConifg second error ==> ', error);
-  }
 
   // Approve
   await erc20Approve(
