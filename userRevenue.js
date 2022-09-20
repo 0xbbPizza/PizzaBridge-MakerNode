@@ -2,16 +2,14 @@ const { redisDB } = require('./db/redis')
 const ethers = require("ethers");
 const KEY = 'UserAddressList'
 
-async function addUserOrRevenue(fromAddress, toAddress, dTokenAddress, destAddress, amount, dTokenContract, chain) {
-    console.log('fromAddress', fromAddress);
-    console.log('toAddress', toAddress);
+async function addUserOrRevenue(accountOrAmount, dTokenAddress, dTokenContract, chain) {
+    console.log('accountOrAmount', accountOrAmount);
     console.log('dTokenAddress', dTokenAddress);
-    console.log('destAddress', destAddress);
     console.log('chain: ', chain);
     try {
-        if (fromAddress === ethers.constants.AddressZero && toAddress !== destAddress) {
-            await redisDB.sadd(KEY, toAddress.toLowerCase())
-        } else if (fromAddress === dTokenAddress && toAddress === destAddress) {
+        if (ethers.utils.isAddress(accountOrAmount)) {
+            await redisDB.sadd(KEY, accountOrAmount.toLowerCase())
+        } else if (ethers.BigNumber.isBigNumber(accountOrAmount)) {
             const accountList = await redisDB.smembers(KEY)
             const decimals = await dTokenContract.decimals()
             for (let i = 0, len = accountList.length; i < len; i++) {
@@ -19,8 +17,8 @@ async function addUserOrRevenue(fromAddress, toAddress, dTokenAddress, destAddre
                 const preParams = await getUserRevenue(userAddress, dTokenAddress)
                 const preRevenue = preParams === null ? ethers.BigNumber.from(0) : ethers.BigNumber.from(preParams)
                 const exchangeRate = await dTokenContract.exchangeRateStored()
-                const currentAccountDTokenCash = await dTokenContract.balanceOf(userAddress)
-                const currentDTokenCash = (await dTokenContract.getCashPrior()).add(amount)
+                const currentAccountDTokenCash = await dTokenContract.balanceOf(userAddress)//代币余额
+                const currentDTokenCash = (await dTokenContract.getCashPrior()).add(accountOrAmount)//总
                 const currentRevenue = (
                     (exchangeRate.mul(currentAccountDTokenCash).div(
                         ethers.utils.parseUnits('1', decimals)

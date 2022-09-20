@@ -7,7 +7,7 @@ WALLET_PRIVATE_KEY = config.privatekey;
 const Web3 = require("web3");
 const axios = require("axios");
 const { SendQueue } = require("./send_queue");
-const { utils } = require("ethers");
+const { utils, ethers, constants } = require("ethers");
 const EthereumTx = require("ethereumjs-tx").Transaction;
 const Common = require("ethereumjs-common").default;
 
@@ -181,14 +181,17 @@ async function becomeCommit(chain) {
 async function doDestContract(value, web3) {
   let { chain, dest, amountToSend, fee, tx, txindex, workindex, isFork } =
     value;
-
+  const tokenAddress = config.tokenDic[chain];
+  const destABI = config.destABI
+  const destAddress = config.destDic[chain]
   const destContract = new web3.eth.Contract(
-    config.destABI,
-    config.destDic[chain],
+    destABI,
+    destAddress,
     (error, result) => {
       if (error) console.log(error);
     }
   );
+  let destDetailsValue = tokenAddress === ethers.constants.AddressZero ? web3.utils.toHex(amountToSend) : '0x0';
 
   let nonce = await web3.eth.getTransactionCount(
     web3.eth.defaultAccount,
@@ -243,8 +246,8 @@ async function doDestContract(value, web3) {
       fee
     );
     destDetails = {
-      to: config.destDic[chain],
-      value: "0x0",
+      to: destAddress,
+      value: destDetailsValue,
       data: destContract.methods
         .zFork(chain, workForkKey, dest, amountToSend, fee, true)
         .encodeABI(),
@@ -256,8 +259,8 @@ async function doDestContract(value, web3) {
   } else {
     console.warn("chain, tx, 0 >>>> ", chain, tx, 0);
     destDetails = {
-      to: config.destDic[chain],
-      value: "0x0",
+      to: destAddress,
+      value: destDetailsValue,
       data: destContract.methods
         .claim(
           chain,
@@ -328,28 +331,31 @@ async function approveToken(value, web3) {
   let { chain, dest, amountToSend, fee, tx, txindex, workindex, isFork } =
     value;
 
-  const tokenContract = new web3.eth.Contract(
-    config.tokenABI,
-    config.tokenDic[chain],
-    (error, result) => {
-      if (error) console.log(error);
-    }
+  const tokenAddress = config.tokenDic[chain];
+  const destAddress = config.destDic[chain]
+  const tokenABI = config.tokenABI
+  const provider = new ethers.providers.JsonRpcProvider(
+    config[chain].httpEndPoint
   );
-
   let tokenBalanceWei = 0;
+  let aprovelDetailsData = constants.HashZero;
 
-  await tokenContract.methods.balanceOf(web3.eth.defaultAccount).call(
-    {
-      from: web3.eth.defaultAccount,
-    },
-    function (error, result) {
-      if (!error) {
-        tokenBalanceWei = result;
-      } else {
-        console.log("tokenBalanceWeiError =", error);
-      }
-    }
-  );
+  if (tokenAddress == ethers.constants.AddressZero) {
+    // ETH
+    tokenBalanceWei = await provider.getBalance(web3.eth.defaultAccount)
+  } else {
+    // ERC20
+    const tokenContract = new ethers.Contract(
+      tokenAddress,
+      tokenABI,
+      provider
+    )
+    tokenBalanceWei = await tokenContract.balanceOf(web3.eth.defaultAccount)
+    aprovelDetailsData = tokenContract.methods
+      .approve(destAddress, web3.utils.toHex(amountToSend))
+      .encodeABI()
+  }
+
   if (!tokenBalanceWei) {
     console.log("Insufficient balance");
     return {
@@ -400,15 +406,13 @@ async function approveToken(value, web3) {
    * Build a new transaction object and sign it locally.
    */
   let aprovelDetails = {
-    to: config.tokenDic[chain],
+    to: tokenAddress,
     value: "0x0",
-    data: tokenContract.methods
-      .approve(config.destDic[chain], web3.utils.toHex(amountToSend))
-      .encodeABI(),
+    data: aprovelDetailsData,
     gas: web3.utils.toHex(gasLimit),
     gasPrice: gasPrices, // converts the gwei price to wei
     nonce: result_nonce,
-    chainId: config[chain].chainID, // mainnet: 1, rinkeby: 4
+    chainId: config[chain].chainID, // mainnet: 1, goerli: 5, arb goerli: 22
   };
 
   let result_chain = config[chain].chainID;

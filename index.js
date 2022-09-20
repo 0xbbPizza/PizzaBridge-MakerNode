@@ -16,64 +16,8 @@ let bondParams = {};
 let bondParamsAndHashKey = 'bondParamsAndHashConifg'
 const workLimit = 5;
 testExpress();
-function test() {
-  let chain = 22;
-  let toChain = 5;
-  let wsEndPoint = config[chain].wsEndPoint;
-  let contractAddress = config.sourceDic[chain];
-
-  const web3 = createAlchemyWeb3(wsEndPoint);
-  const sourceContract = new web3.eth.Contract(
-    config.sourceABI,
-    contractAddress,
-    (error, result) => {
-      if (error) console.log(error);
-    }
-  );
-
-  const options = {
-    filter: {
-      txindex: 1,
-      chainId: toChain
-    },
-    fromBlock: "0"
-  };
-
-  sourceContract.getPastEvents("newTransfer", options, async (err, events) => {
-    if (err) {
-      console.log(err);
-      return;
-    }
-    if (events.length === 0) {
-      console.log("no txindex info");
-      return;
-    }
-
-    let value = events[0].returnValues;
-    console.log("newValue =", value);
-    let amountToSend = value.amount;
-    let dest = value.dest;
-    let fee = value.fee;
-    let tx =
-      "0x1f5ee9240a225d8421e8f5484f69bcc317fd388457a241b71f0d50ed97869740";
-    let txindex = 0;
-    let isFork = false;
-    let workindex = 1;
-    await sendTransaction.send(
-      toChain,
-      dest,
-      amountToSend,
-      fee,
-      tx,
-      txindex,
-      workindex,
-      isFork
-    );
-  });
-}
 
 async function testExpress() {
-  // test();
   try {
     server()
   } catch (err) {
@@ -85,10 +29,8 @@ async function testExpress() {
       await sendTransaction.becomeCommit(5);
       await sendTransaction.becomeCommit(22);
       status = false
-      console.log('status', status)
     } catch (error) {
       console.error("commiter_error =", error);
-      // return;
     }
   }
   startMaker();
@@ -141,11 +83,11 @@ async function startMaker() {
       }
       bondParams[chain] = tmpBondParams
     }
-    watchPool(contractAddress, dTokenAddress, coinAddress, providers, chain, true);
+    watchPool(contractAddress, dTokenAddress, coinAddress, providers, chain, true, coinAddress === ethers.constants.AddressZero ? true : false);
   }
   return "start Maker";
 }
-function watchPool(sourceAddress, dTokenAddress, coinAddress, providers, chain, isSource) {
+function watchPool(sourceAddress, dTokenAddress, coinAddress, providers, chain, isSource, isETH) {
   // Instantiate web3 with WebSocketProvider
   let wsEndPoint = providers.wsEndPoint;
   let contractAddress = sourceAddress;
@@ -169,31 +111,20 @@ function watchPool(sourceAddress, dTokenAddress, coinAddress, providers, chain, 
         if (error) console.log(error);
       }
     )
-    const coinContract = new web3.eth.Contract(
-      config.tokenABI,
-      coinAddress,
-      (error, result) => {
-        if (error) console.log(error);
-      }
-    )
+
     // Generate filter options
     const sourceOptions = {
       fromBlock: "latest"
     };
-    const dTokenOptions = {
+    const dTokenTransferOptions = {
       fromBlock: "latest",
       filter: {
         from: ethers.constants.AddressZero
       }
     }
-    const coinOptions = {
-      fromBlock: "latest",
-      filter: {
-        from: Object.values(config.dTokenDic),
-        to: Object.values(config.destDic)
-      }
+    const dTokenBorrowTransferOptions = {
+      fromBlock: "latest"
     }
-
     // Subscribe to Transfer events matching filter criteria
     sourceContract.events
       .newTransfer(sourceOptions, async (error, event) => {
@@ -217,13 +148,22 @@ function watchPool(sourceAddress, dTokenAddress, coinAddress, providers, chain, 
       });
 
     dTokenContract.events
-      .Transfer(dTokenOptions, async (error, event) => {
+      .mintTransfer(dTokenOptions, async (error, event) => {
         if (error) {
-          console.log("source_wsEndPoint =", wsEndPoint);
+          console.log("dToken Transfer=", wsEndPoint);
           console.log(error);
           return;
-        }
-        doDToken(dTokenContract, null, event)
+        }//account
+        doDToken(dTokenContract, event, true)
+        return;
+      })
+      .BorrowTransfer(dTokenBorrowTransferOptions, async (error, event) => {
+        if (error) {
+          console.log("dToken BorrowTransfer=", wsEndPoint);
+          console.log(error);
+          return;
+        }//amount
+        doDToken(dTokenContract, event, false)
         return;
       })
       .on("connected", async function (subscriptionId) {
@@ -237,64 +177,25 @@ function watchPool(sourceAddress, dTokenAddress, coinAddress, providers, chain, 
         );
       });
 
-    coinContract.events
-      .Transfer(coinOptions, async (error, event) => {
-        if (error) {
-          console.log("source_wsEndPoint =", wsEndPoint);
-          console.log(error);
-          return;
-        }
-        doDToken(null, null, event)
-        return;
-      })
-      .on("connected", async function (subscriptionId) {
-        console.log(
-          "coin_subscriptionId =",
-          subscriptionId,
-          " time =",
-          getTime(),
-          "chain =",
-          chain
-        );
-      });
+
   }
 }
 
 /**
  * 
- * @param  dTokenContract 1.from coinContract:null  2.from dTokenContract:dTokenContract
- * @param  toChainId 1.from event:null  2.from hand:chainId
+ * @param  dTokenContract 
  * @param  value event
  */
-async function doDToken(dTokenContract, toChainId, value) {
-  let fromAddress, toAddress, amount, dTokenAddress, destAddress, chain = null
-  if (toChainId === null) {
-    fromAddress = value.returnValues.from
-    toAddress = value.returnValues.to
-    amount = value.returnValues.value
-    dTokenAddress = dTokenContract !== null ? dTokenContract._address : fromAddress
-    destAddress = null
-    chain = Object.entries(config.dTokenDic).find((item) => item[1] === dTokenAddress)[0]
-    destAddress = config.destDic[chain]
+async function doDToken(dTokenContract, value, status) {
+  let accountOrAmount, dTokenAddress, chain = null
+  if (status) {
+    accountOrAmount = value.returnValues.minter
   } else {
-    chain = toChainId
-    dTokenAddress = config.dTokenDic[chain]
-    fromAddress = dTokenAddress
-    destAddress = config.destDic[chain]
-    toAddress = destAddress
-    amount = ethers.BigNumber.from(0)
+    accountOrAmount = value.returnValues.borrowAmount
   }
-  if (dTokenContract === null) {
-    let provider = new ethers.providers.JsonRpcProvider(
-      config[chain].httpEndPoint
-    );
-    dTokenContract = new ethers.Contract(
-      dTokenAddress,
-      config.dTokenABI,
-      provider
-    );
-  }
-  await addUserOrRevenue(fromAddress, toAddress, dTokenAddress, destAddress, amount, dTokenContract, chain)
+  dTokenAddress = dTokenContract._address
+  chain = Object.entries(config.dTokenDic).find((item) => item[1] === dTokenAddress)[0]
+  await addUserOrRevenue(accountOrAmount, dTokenAddress, dTokenContract, chain)
 }
 
 async function doDest(sourceContract, value) {
@@ -424,23 +325,27 @@ async function doDest(sourceContract, value) {
 async function depositZFork(toChainId, forkKey) {
   // Deep copy bondParams
   const currentBondParams = JSON.parse(JSON.stringify(bondParams[toChainId]));
-
+  const tokenAddress = config.tokenDic[toChainId]
+  const destAddress = config.destDic[toChainId]
   const provider = new ethers.providers.JsonRpcProvider(
     config[toChainId].httpEndPoint
   );
   const singer = new ethers.Wallet(config.privatekey, provider);
   const destContract = new ethers.Contract(
-    config.destDic[toChainId],
+    destAddress,
     config.destABI,
     singer
   );
 
-  // Approve
-  await erc20Approve(
-    singer,
-    config.tokenDic[toChainId],
-    config.destDic[toChainId]
-  );
+  if (tokenAddress !== ethers.constants.AddressZero) {
+    // ERC20 Approve
+    await erc20Approve(
+      singer,
+      tokenAddress,
+      destAddress
+    );
+  }
+
 
   const respDeposit = await destContract.depositWithOneFork(forkKey, await getPolygonMumbaiFastPerGas());
   console.log("respDeposit ::: ", respDeposit);
