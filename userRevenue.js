@@ -17,8 +17,8 @@ async function addUserOrRevenue(accountOrAmount, dTokenAddress, dTokenContract, 
                 const preParams = await getUserRevenue(userAddress, dTokenAddress)
                 const preRevenue = preParams === null ? ethers.BigNumber.from(0) : ethers.BigNumber.from(preParams)
                 const exchangeRate = await dTokenContract.exchangeRateStored()
-                const currentAccountDTokenCash = await dTokenContract.balanceOf(userAddress)//代币余额
-                const currentDTokenCash = (await dTokenContract.getCashPrior()).add(accountOrAmount)//总
+                const currentAccountDTokenCash = await dTokenContract.balanceOf(userAddress)
+                const currentDTokenCash = (await dTokenContract.getCashPrior()).add(accountOrAmount)
                 const currentRevenue = (
                     (exchangeRate.mul(currentAccountDTokenCash).div(
                         ethers.utils.parseUnits('1', decimals)

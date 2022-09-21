@@ -71,7 +71,6 @@ async function startMaker() {
     const chain = sourceKeyList[index];
     const contractAddress = config.sourceDic[chain];
     const dTokenAddress = config.dTokenDic[chain]
-    const coinAddress = config.tokenDic[chain]
     const providers = config[chain];
     if (doInitBondParams) {
       let tmpHashArray = []
@@ -83,11 +82,11 @@ async function startMaker() {
       }
       bondParams[chain] = tmpBondParams
     }
-    watchPool(contractAddress, dTokenAddress, coinAddress, providers, chain, true, coinAddress === ethers.constants.AddressZero ? true : false);
+    watchPool(contractAddress, dTokenAddress, providers, chain, true);
   }
   return "start Maker";
 }
-function watchPool(sourceAddress, dTokenAddress, coinAddress, providers, chain, isSource, isETH) {
+function watchPool(sourceAddress, dTokenAddress, providers, chain, isSource) {
   // Instantiate web3 with WebSocketProvider
   let wsEndPoint = providers.wsEndPoint;
   let contractAddress = sourceAddress;
@@ -116,13 +115,7 @@ function watchPool(sourceAddress, dTokenAddress, coinAddress, providers, chain, 
     const sourceOptions = {
       fromBlock: "latest"
     };
-    const dTokenTransferOptions = {
-      fromBlock: "latest",
-      filter: {
-        from: ethers.constants.AddressZero
-      }
-    }
-    const dTokenBorrowTransferOptions = {
+    const dTokenOptions = {
       fromBlock: "latest"
     }
     // Subscribe to Transfer events matching filter criteria
@@ -150,19 +143,31 @@ function watchPool(sourceAddress, dTokenAddress, coinAddress, providers, chain, 
     dTokenContract.events
       .mintTransfer(dTokenOptions, async (error, event) => {
         if (error) {
-          console.log("dToken Transfer=", wsEndPoint);
+          console.log("dToken mintTransfer=", wsEndPoint);
           console.log(error);
           return;
-        }//account
+        }
         doDToken(dTokenContract, event, true)
         return;
       })
-      .BorrowTransfer(dTokenBorrowTransferOptions, async (error, event) => {
+      .on("connected", async function (subscriptionId) {
+        console.log(
+          "dToken_subscriptionId =",
+          subscriptionId,
+          " time =",
+          getTime(),
+          "chain =",
+          chain
+        );
+      });
+
+    dTokenContract.events
+      .BorrowTransfer(dTokenOptions, async (error, event) => {
         if (error) {
           console.log("dToken BorrowTransfer=", wsEndPoint);
           console.log(error);
           return;
-        }//amount
+        }
         doDToken(dTokenContract, event, false)
         return;
       })
@@ -185,6 +190,7 @@ function watchPool(sourceAddress, dTokenAddress, coinAddress, providers, chain, 
  * 
  * @param  dTokenContract 
  * @param  value event
+ * @param  status mintTransfer:true BorrowTransfer:false
  */
 async function doDToken(dTokenContract, value, status) {
   let accountOrAmount, dTokenAddress, chain = null
