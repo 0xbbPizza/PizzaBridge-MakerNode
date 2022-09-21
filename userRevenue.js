@@ -11,7 +11,6 @@ async function addUserOrRevenue(accountOrAmount, dTokenAddress, dTokenContract, 
             await redisDB.sadd(KEY, accountOrAmount.toLowerCase())
         } else if (ethers.BigNumber.isBigNumber(accountOrAmount)) {
             const accountList = await redisDB.smembers(KEY)
-            const decimals = await dTokenContract.decimals()
             for (let i = 0, len = accountList.length; i < len; i++) {
                 const userAddress = accountList[i]
                 const preParams = await getUserRevenue(userAddress, dTokenAddress)
@@ -21,7 +20,7 @@ async function addUserOrRevenue(accountOrAmount, dTokenAddress, dTokenContract, 
                 const currentDTokenCash = (await dTokenContract.getCashPrior()).add(accountOrAmount)
                 const currentRevenue = (
                     (exchangeRate.mul(currentAccountDTokenCash).div(
-                        ethers.utils.parseUnits('1', decimals)
+                        ethers.utils.parseEther('1')
                     ).sub(currentAccountDTokenCash)).mul(currentAccountDTokenCash.div(currentDTokenCash))
                 )
                 const totalRevenue = preRevenue.add(currentRevenue)
