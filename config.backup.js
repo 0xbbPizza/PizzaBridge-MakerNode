@@ -15,27 +15,40 @@ module.exports = {
     gasPrice: "10",
     chainID: 421613,
   },
+  77: {
+    wsEndPoint:
+      "wss://opt-goerli.g.alchemy.com/v2/ChkRlZzMrEsYeffOEqPaA2lIuL7SMbTv",
+    httpEndPoint:
+      "https://opt-goerli.g.alchemy.com/v2/ChkRlZzMrEsYeffOEqPaA2lIuL7SMbTv",
+    gasPrice: "10",
+    chainID: 420,
+  },
   makerAddress: "yourAddress",
   privatekey:
     "privatekey",
+
   destDic: {
-    5: "0xb1e19241A5b7fF57d66e2fd57a02d8c10F92b452",
-    22: "0xC7Ea534F4831f2D96Ee59770cA3Bf4681890E4EF"
+    5: "0x7d9B240b2Abf5E3E0dF973ee795fD19BdAf3F31C",
+    22: "0x459dB976E7d74AE814F0f7Ee8511Bd8Bebf015Bb",
+    77: "0x2DA4bBEF26D9F56D5762cB1AB8D4cB9c0986C99c"
   },
 
   sourceDic: {
-    5: "0xeF301C3a142A0a20310b1bf98e9b9af5e56f52F1",
-    22: "0x42cbE44636aEb019402Eae2808131a5E858E8636"
+    5: "0xE01FebDBf4DcE16EEf36D0D298D47FF2611D28BE",
+    22: "0x989DdB10C14f95034323a1cb74Ac7226f3E575a0",
+    77: "0x20632579396d6000f94fE9648553D063d4bc0E56"
   },
 
   dTokenDic: {
-    5: "0xE326693B9E7660CE4F3d1946801B91513404eDbC",
-    22: "0x179ac6e2513B0B78BE36941E0eEC8f0E58b1A2Cf"
+    5: "0xdE96c8ef09aB7022a6578a5D9f92D54b458ee1E4",
+    22: "0xACFdF85CaB0cDC4C504DdfB04b2A4b6Ab6987774",
+    77: "0x49ac6F2A0ee034164bFD624894cc16c292478E60"
   },
 
   tokenDic: {
     5: "0x5C221E77624690fff6dd741493D735a17716c26B",
     22: "0x3d9835F9cB196f8A88b0d4F9586C3E427af1Ffe0",
+    77: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
   },
 
   destABI: [
@@ -878,314 +891,314 @@ module.exports = {
   ],
   sourceABI: [
     {
-      inputs: [
+      "inputs": [
         {
-          internalType: "address",
-          name: "_tokenAddress",
-          type: "address",
+          "internalType": "address",
+          "name": "_tokenAddress",
+          "type": "address"
         },
         {
-          internalType: "address",
-          name: "_dockAddr",
-          type: "address",
+          "internalType": "address",
+          "name": "_dockAddr",
+          "type": "address"
         },
         {
-          internalType: "address",
-          name: "_sameDomainDestAddress",
-          type: "address",
-        },
+          "internalType": "address",
+          "name": "_sameDomainDestAddress",
+          "type": "address"
+        }
       ],
-      stateMutability: "nonpayable",
-      type: "constructor",
+      "stateMutability": "nonpayable",
+      "type": "constructor"
     },
     {
-      anonymous: false,
-      inputs: [
+      "anonymous": false,
+      "inputs": [
         {
-          indexed: true,
-          internalType: "address",
-          name: "previousOwner",
-          type: "address",
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
         },
         {
-          indexed: true,
-          internalType: "address",
-          name: "newOwner",
-          type: "address",
-        },
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
       ],
-      name: "OwnershipTransferred",
-      type: "event",
+      "name": "OwnershipTransferred",
+      "type": "event"
     },
     {
-      anonymous: false,
-      inputs: [
+      "anonymous": false,
+      "inputs": [
         {
-          indexed: false,
-          internalType: "uint256",
-          name: "txIndex",
-          type: "uint256",
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "txIndex",
+          "type": "uint256"
         },
         {
-          indexed: false,
-          internalType: "uint256",
-          name: "amount",
-          type: "uint256",
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
         },
         {
-          indexed: false,
-          internalType: "bytes32",
-          name: "hashOnion",
-          type: "bytes32",
-        },
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "hashOnion",
+          "type": "bytes32"
+        }
       ],
-      name: "extract",
-      type: "event",
+      "name": "extract",
+      "type": "event"
     },
     {
-      anonymous: false,
-      inputs: [
+      "anonymous": false,
+      "inputs": [
         {
-          indexed: true,
-          internalType: "uint256",
-          name: "txindex",
-          type: "uint256",
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "txindex",
+          "type": "uint256"
         },
         {
-          indexed: false,
-          internalType: "bytes32",
-          name: "hashOnion",
-          type: "bytes32",
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "hashOnion",
+          "type": "bytes32"
         },
         {
-          indexed: false,
-          internalType: "address",
-          name: "dest",
-          type: "address",
+          "indexed": false,
+          "internalType": "address",
+          "name": "dest",
+          "type": "address"
         },
         {
-          indexed: false,
-          internalType: "uint256",
-          name: "amount",
-          type: "uint256",
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
         },
         {
-          indexed: false,
-          internalType: "uint256",
-          name: "fee",
-          type: "uint256",
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "fee",
+          "type": "uint256"
         },
         {
-          indexed: true,
-          internalType: "uint256",
-          name: "chainId",
-          type: "uint256",
-        },
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "chainId",
+          "type": "uint256"
+        }
       ],
-      name: "newTransfer",
-      type: "event",
+      "name": "newTransfer",
+      "type": "event"
     },
     {
-      inputs: [],
-      name: "ONEFORK_MAX_LENGTH",
-      outputs: [
+      "inputs": [],
+      "name": "ONEFORK_MAX_LENGTH",
+      "outputs": [
         {
-          internalType: "uint8",
-          name: "",
-          type: "uint8",
-        },
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
       ],
-      stateMutability: "view",
-      type: "function",
+      "stateMutability": "view",
+      "type": "function"
     },
     {
-      inputs: [
+      "inputs": [
         {
-          internalType: "uint256",
-          name: "chainId",
-          type: "uint256",
+          "internalType": "uint256",
+          "name": "chainId",
+          "type": "uint256"
         },
         {
-          internalType: "address",
-          name: "destContract",
-          type: "address",
-        },
+          "internalType": "address",
+          "name": "destContract",
+          "type": "address"
+        }
       ],
-      name: "addDestDomain",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function",
+      "name": "addDestDomain",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-      inputs: [
+      "inputs": [
         {
-          internalType: "uint256",
-          name: "",
-          type: "uint256",
-        },
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
       ],
-      name: "chainId_Onions",
-      outputs: [
+      "name": "chainId_Onions",
+      "outputs": [
         {
-          internalType: "uint256",
-          name: "txIndex",
-          type: "uint256",
+          "internalType": "uint256",
+          "name": "txIndex",
+          "type": "uint256"
         },
         {
-          internalType: "bytes32",
-          name: "hashOnion",
-          type: "bytes32",
+          "internalType": "bytes32",
+          "name": "hashOnion",
+          "type": "bytes32"
         },
         {
-          internalType: "bytes32",
-          name: "bringHashOnion",
-          type: "bytes32",
+          "internalType": "bytes32",
+          "name": "bringHashOnion",
+          "type": "bytes32"
         },
         {
-          internalType: "address",
-          name: "destAddress",
-          type: "address",
-        },
+          "internalType": "address",
+          "name": "destAddress",
+          "type": "address"
+        }
       ],
-      stateMutability: "view",
-      type: "function",
+      "stateMutability": "view",
+      "type": "function"
     },
     {
-      inputs: [],
-      name: "dockAddr",
-      outputs: [
+      "inputs": [],
+      "name": "dockAddr",
+      "outputs": [
         {
-          internalType: "address",
-          name: "",
-          type: "address",
-        },
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
       ],
-      stateMutability: "view",
-      type: "function",
+      "stateMutability": "view",
+      "type": "function"
     },
     {
-      inputs: [
+      "inputs": [
         {
-          internalType: "uint256",
-          name: "_chainId",
-          type: "uint256",
-        },
+          "internalType": "uint256",
+          "name": "_chainId",
+          "type": "uint256"
+        }
       ],
-      name: "extractHashOnion",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function",
+      "name": "extractHashOnion",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-      inputs: [],
-      name: "owner",
-      outputs: [
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
         {
-          internalType: "address",
-          name: "",
-          type: "address",
-        },
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
       ],
-      stateMutability: "view",
-      type: "function",
+      "stateMutability": "view",
+      "type": "function"
     },
     {
-      inputs: [],
-      name: "renounceOwnership",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function",
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-      inputs: [],
-      name: "sameDomainDestAddress",
-      outputs: [
+      "inputs": [],
+      "name": "sameDomainDestAddress",
+      "outputs": [
         {
-          internalType: "address",
-          name: "",
-          type: "address",
-        },
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
       ],
-      stateMutability: "view",
-      type: "function",
+      "stateMutability": "view",
+      "type": "function"
     },
     {
-      inputs: [],
-      name: "tokenAddress",
-      outputs: [
+      "inputs": [],
+      "name": "tokenAddress",
+      "outputs": [
         {
-          internalType: "address",
-          name: "",
-          type: "address",
-        },
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
       ],
-      stateMutability: "view",
-      type: "function",
+      "stateMutability": "view",
+      "type": "function"
     },
     {
-      inputs: [
+      "inputs": [
         {
-          internalType: "uint256",
-          name: "chainId",
-          type: "uint256",
+          "internalType": "uint256",
+          "name": "chainId",
+          "type": "uint256"
         },
         {
-          internalType: "uint256",
-          name: "amount",
-          type: "uint256",
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
         },
         {
-          internalType: "uint256",
-          name: "fee",
-          type: "uint256",
-        },
+          "internalType": "uint256",
+          "name": "fee",
+          "type": "uint256"
+        }
       ],
-      name: "transfer",
-      outputs: [],
-      stateMutability: "payable",
-      type: "function",
+      "name": "transfer",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
     },
     {
-      inputs: [
+      "inputs": [
         {
-          internalType: "address",
-          name: "newOwner",
-          type: "address",
-        },
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
       ],
-      name: "transferOwnership",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function",
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-      inputs: [
+      "inputs": [
         {
-          internalType: "uint256",
-          name: "chainId",
-          type: "uint256",
+          "internalType": "uint256",
+          "name": "chainId",
+          "type": "uint256"
         },
         {
-          internalType: "address",
-          name: "dest",
-          type: "address",
+          "internalType": "address",
+          "name": "dest",
+          "type": "address"
         },
         {
-          internalType: "uint256",
-          name: "amount",
-          type: "uint256",
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
         },
         {
-          internalType: "uint256",
-          name: "fee",
-          type: "uint256",
-        },
+          "internalType": "uint256",
+          "name": "fee",
+          "type": "uint256"
+        }
       ],
-      name: "transferWithDest",
-      outputs: [],
-      stateMutability: "payable",
-      type: "function",
-    },
+      "name": "transferWithDest",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    }
   ],
   tokenABI: [
     {
@@ -2280,5 +2293,5 @@ module.exports = {
       "stateMutability": "pure",
       "type": "function"
     }
-  ]
+  ],
 };

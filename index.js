@@ -13,7 +13,7 @@ const { saveConfig, getConfig } = require('./configSave')
 let web3List = [];
 let hashArray = {};
 let bondParams = {};
-let bondParamsAndHashKey = 'bondParamsAndHashConifg'
+let bondParamsAndHashKey = 'bondParamsAndHashConfig'
 const workLimit = 5;
 testExpress();
 
@@ -28,6 +28,7 @@ async function testExpress() {
     try {
       await sendTransaction.becomeCommit(5);
       await sendTransaction.becomeCommit(22);
+      await sendTransaction.becomeCommit(77);
       status = false
     } catch (error) {
       console.error("commiter_error =", error);
