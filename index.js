@@ -127,7 +127,7 @@ function watchPool(sourceAddress, dTokenAddress, providers, chain, isSource) {
           console.log(error);
           return;
         }
-        doDest(sourceContract, event);
+        doDest(sourceContract, event, chain);
         return;
       })
       .on("connected", async function (subscriptionId) {
@@ -205,7 +205,7 @@ async function doDToken(dTokenContract, value, status) {
   await addUserOrRevenue(accountOrAmount, dTokenAddress, dTokenContract, chain)
 }
 
-async function doDest(sourceContract, value) {
+async function doDest(sourceContract, value, fromChain) {
 
   console.log("returnValue =", value);
 
@@ -273,6 +273,7 @@ async function doDest(sourceContract, value) {
 
   await sendTransaction.send(
     Number(chain),
+    Number(fromChain),
     dest,
     amountToSend,
     fee,
@@ -300,7 +301,7 @@ async function doDest(sourceContract, value) {
   if (workindex == workLimit - 1) {
     if (bondParams[chain].prevForkKey === "") {
       let currentHashOnion = ethers.constants.HashZero;
-      bondParams[chain].prevForkKey = generateForkKey(chain, currentHashOnion)
+      bondParams[chain].prevForkKey = generateForkKey(fromChain, currentHashOnion)
     }
 
     const forkKey = generateForkKey(chain, tx);

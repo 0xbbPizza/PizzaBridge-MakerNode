@@ -179,7 +179,7 @@ async function becomeCommit(chain) {
 }
 
 async function doDestContract(value, web3) {
-  let { chain, dest, amountToSend, fee, tx, txindex, workindex, isFork } =
+  let { chain, fromChain, dest, amountToSend, fee, tx, txindex, workindex, isFork } =
     value;
   const tokenAddress = config.tokenDic[chain];
   const destABI = config.destABI
@@ -232,13 +232,15 @@ async function doDestContract(value, web3) {
   console.log("workindex =", workindex);
   console.log("isFork =", isFork);
   console.log("chain =", chain);
+  console.log("fromChain=", fromChain);
 
-  const workForkKey = generateForkKey(chain, tx, 0);
+  const workForkKey = generateForkKey(fromChain, tx, 0);
   console.warn('workForkKey:: ', workForkKey);
   if (isFork) {
     console.warn(
-      "chain, tx, txindex, dest, amountToSend, fee >>>> ",
+      "chain, fromChain, tx, txindex, dest, amountToSend, fee >>>> ",
       chain,
+      fromChain,
       tx,
       txindex,
       dest,
@@ -249,7 +251,7 @@ async function doDestContract(value, web3) {
       to: destAddress,
       value: destDetailsValue,
       data: destContract.methods
-        .zFork(chain, workForkKey, dest, amountToSend, fee, true)
+        .zFork(fromChain, workForkKey, dest, amountToSend, fee, true)
         .encodeABI(),
       gas: web3.utils.toHex(gasLimit),
       gasPrice: gasPrices, // converts the gwei price to wei
@@ -257,13 +259,13 @@ async function doDestContract(value, web3) {
       chainId: config[chain].chainID,
     };
   } else {
-    console.warn("chain, tx, 0 >>>> ", chain, tx, 0);
+    console.warn("Chain, fromChain, tx, 0 >>>> ", chain, fromChain, tx, 0);
     destDetails = {
       to: destAddress,
       value: destDetailsValue,
       data: destContract.methods
         .claim(
-          chain,
+          fromChain,
           workForkKey,
           workindex,
           [{ destination: dest, amount: amountToSend, fee: fee }],
@@ -328,15 +330,17 @@ async function doDestContract(value, web3) {
 }
 
 async function approveToken(value, web3) {
-  let { chain, dest, amountToSend, fee, tx, txindex, workindex, isFork } =
+  let { chain, fromChain, dest, amountToSend, fee, tx, txindex, workindex, isFork } =
     value;
 
   const tokenAddress = config.tokenDic[chain];
   const destAddress = config.destDic[chain]
   const tokenABI = config.tokenABI
   const provider = new ethers.providers.JsonRpcProvider(
+
     config[chain].httpEndPoint
   );
+  const singer = provider.getSigner();
   let tokenBalanceWei = 0;
   let aprovelDetailsData = constants.HashZero;
 
@@ -348,12 +352,10 @@ async function approveToken(value, web3) {
     const tokenContract = new ethers.Contract(
       tokenAddress,
       tokenABI,
-      provider
+      singer
     )
     tokenBalanceWei = await tokenContract.balanceOf(web3.eth.defaultAccount)
-    aprovelDetailsData = tokenContract.methods
-      .approve(destAddress, web3.utils.toHex(amountToSend))
-      .encodeABI()
+    aprovelDetailsData = tokenContract.approve(destAddress, web3.utils.toHex(amountToSend)).encodeABI()
   }
 
   if (!tokenBalanceWei) {
@@ -482,6 +484,7 @@ async function sendConsumer(value) {
  */
 async function send(
   chain,
+  fromChain,
   dest,
   amountToSend,
   fee,
@@ -495,6 +498,7 @@ async function send(
   return new Promise((resolve, reject) => {
     const value = {
       chain,
+      fromChain,
       dest,
       amountToSend,
       fee,
