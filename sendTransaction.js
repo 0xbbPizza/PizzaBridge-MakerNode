@@ -340,7 +340,8 @@ async function approveToken(value, web3) {
 
     config[chain].httpEndPoint
   );
-  const singer = provider.getSigner();
+  const wallet = new ethers.Wallet(WALLET_PRIVATE_KEY, provider)
+  const singer = wallet.provider.getSigner(wallet.address);
   let tokenBalanceWei = 0;
   let aprovelDetailsData = constants.HashZero;
 
@@ -355,7 +356,9 @@ async function approveToken(value, web3) {
       singer
     )
     tokenBalanceWei = await tokenContract.balanceOf(web3.eth.defaultAccount)
-    aprovelDetailsData = tokenContract.approve(destAddress, web3.utils.toHex(amountToSend)).encodeABI()
+    let ABI = ["function approve(address spender, uint256 amount)"]
+    let iface = new ethers.utils.Interface(ABI)
+    aprovelDetailsData = iface.encodeFunctionData("approve", [destAddress, web3.utils.toHex(amountToSend)])
   }
 
   if (!tokenBalanceWei) {
