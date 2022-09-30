@@ -6,8 +6,8 @@ const cors = require('cors');
 const path = require('path')
 const fs = require('fs');
 const app = express()
-const privateKey = fs.readFileSync(path.join(__dirname, '../../../../cert/private.key'), 'utf8')
-const certificate = fs.readFileSync(path.join(__dirname, '../../../../cert/__orbiter_finance.crt'), 'utf8');
+const privateKey = fs.readFileSync(path.join(__dirname, '/cert/private.key'), 'utf8')
+const certificate = fs.readFileSync(path.join(__dirname, '/cert/__orbiter_finance.crt'), 'utf8');
 const credentials = { key: privateKey, cert: certificate };
 const httpsServer = https.createServer(credentials, app);
 const server = async () => {
