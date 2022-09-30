@@ -1,15 +1,15 @@
 const dotenv = require("dotenv");
 dotenv.config();
-const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
-const config = require("./config");
-let sd = require("silly-datetime");
-const sendTransaction = require("./sendTransaction");
-const ethers = require("ethers");
-const { sleep } = require("zksync/build/utils");
-const axios = require("axios");
-const { server } = require('./router/index')
 const { addUserOrRevenue, getRevenueFlag } = require('./userRevenue')
+const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 const { saveConfig, getConfig } = require('./configSave')
+const sendTransaction = require("./sendTransaction");
+const { sleep } = require("zksync/build/utils");
+const { server } = require('./router/index')
+const sd = require("silly-datetime");
+const config = require("./config");
+const ethers = require("ethers");
+const axios = require("axios");
 let web3List = [];
 let hashArray = {};
 let bondParams = {};

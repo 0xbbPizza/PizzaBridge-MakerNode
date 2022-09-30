@@ -23,26 +23,26 @@ module.exports = {
     gasPrice: "10",
     chainID: 420,
   },
-  makerAddress: "yourAddress",
+  makerAddress: "makerAddress",
   privatekey:
     "privatekey",
 
   destDic: {
-    5: "0x7d9B240b2Abf5E3E0dF973ee795fD19BdAf3F31C",
-    22: "0x459dB976E7d74AE814F0f7Ee8511Bd8Bebf015Bb",
-    77: "0x2DA4bBEF26D9F56D5762cB1AB8D4cB9c0986C99c"
+    5: "0xD7155aC7Fca3C39a2D7f84CC6b802C23E026C3C2",
+    22: "0xFEd34c8a6E2B6Be58ebAeE430Ca7B9F3cbc565d9",
+    77: "0xBADE88dfFe936D86F806b6e5beCC384be723D862"
   },
 
   sourceDic: {
-    5: "0xE01FebDBf4DcE16EEf36D0D298D47FF2611D28BE",
-    22: "0x989DdB10C14f95034323a1cb74Ac7226f3E575a0",
-    77: "0x20632579396d6000f94fE9648553D063d4bc0E56"
+    5: "0xA5666703a40507a2953ca1Ef6c52168818c5E3B1",
+    22: "0xE3e3b269C509b54CD66b6dd5d0dfA13c56ecfdDc",
+    77: "0x45df2ED37f7320a2843543eEcD88F45C62b53dA0"
   },
 
   dTokenDic: {
-    5: "0xdE96c8ef09aB7022a6578a5D9f92D54b458ee1E4",
-    22: "0xACFdF85CaB0cDC4C504DdfB04b2A4b6Ab6987774",
-    77: "0x49ac6F2A0ee034164bFD624894cc16c292478E60"
+    5: "0xAfc218c083948d88461f8F0cB4Fde95A91a806f9",
+    22: "0x0AC19E03A2FE346a03268f6777E8D097CB3Dbc79",
+    77: "0xf78fB93b37e661934f0A9f57Cf43972Dba5Ce54B"
   },
 
   tokenDic: {
@@ -60,7 +60,7 @@ module.exports = {
           "type": "address"
         },
         {
-          "internalType": "address",
+          "internalType": "address payable",
           "name": "dTokenAddress_",
           "type": "address"
         },
@@ -346,7 +346,7 @@ module.exports = {
       ],
       "name": "claim",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -541,6 +541,25 @@ module.exports = {
       "name": "earlyBond",
       "outputs": [],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        }
+      ],
+      "name": "getBalance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -751,7 +770,7 @@ module.exports = {
       ],
       "name": "mFork",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -835,7 +854,7 @@ module.exports = {
       ],
       "name": "zFork",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -885,8 +904,12 @@ module.exports = {
       ],
       "name": "zbond",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
     }
   ],
   sourceABI: [
@@ -1082,11 +1105,57 @@ module.exports = {
           "internalType": "uint256",
           "name": "_chainId",
           "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "maxGas",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "gasPriceBid",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "maxSubmissionCost",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "excessFeeRefundAddress",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct Data.ArbInfo",
+          "name": "arbInfo",
+          "type": "tuple"
         }
       ],
       "name": "extractHashOnion",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        }
+      ],
+      "name": "getBalance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -1534,6 +1603,19 @@ module.exports = {
       "anonymous": false,
       "inputs": [
         {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "borrowAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "BorrowTransfer",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
           "indexed": true,
           "internalType": "address",
           "name": "previousOwner",
@@ -1572,6 +1654,19 @@ module.exports = {
         }
       ],
       "name": "Transfer",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "minter",
+          "type": "address"
+        }
+      ],
+      "name": "mintTransfer",
       "type": "event"
     },
     {
@@ -1779,6 +1874,25 @@ module.exports = {
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        }
+      ],
+      "name": "getBalance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "uint256",
           "name": "cash",
           "type": "uint256"
@@ -1966,7 +2080,7 @@ module.exports = {
           "type": "bool"
         }
       ],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -2076,7 +2190,7 @@ module.exports = {
       ],
       "name": "repayBorrow",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -2292,6 +2406,10 @@ module.exports = {
       ],
       "stateMutability": "pure",
       "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
     }
-  ],
+  ]
 };
