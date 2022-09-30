@@ -68,26 +68,36 @@ async function startMaker() {
 
   }
 
-  for (let index = 0; index < sourceKeyList.length; index++) {
-    const chain = sourceKeyList[index];
-    const contractAddress = config.sourceDic[chain];
-    const dTokenAddress = config.dTokenDic[chain]
-    const providers = config[chain];
+  for (let fromIndex = 0; fromIndex < sourceKeyList.length; fromIndex++) {
+    const fromChain = sourceKeyList[fromIndex];
+    const contractAddress = config.sourceDic[fromChain];
+    const dTokenAddress = config.dTokenDic[fromChain]
+    const providers = config[fromChain];
     if (doInitBondParams) {
-      let tmpHashArray = []
-      hashArray[chain] = tmpHashArray
-      let tmpBondParams = {
-        prevForkKey: "",
-        _transferDatas: [],
-        _committers: [],
+      let toChainBondParams = {}
+      let toChainHashArray = {}
+      let toChainList = JSON.parse(JSON.stringify(sourceKeyList));
+      toChainList.splice(toChainList.indexOf(fromChain), 1)
+      for (let toIndex = 0; toIndex < toChainList.length; toIndex++) {
+        const toChain = toChainList[toIndex]
+        let tmpHashArray = []
+        let tmpBondParams = {
+          prevForkKey: "",
+          _transferDatas: [],
+          _committers: [],
+        }
+        toChainHashArray[toChain] = tmpHashArray
+        toChainBondParams[toChain] = tmpBondParams
       }
-      bondParams[chain] = tmpBondParams
+      bondParams[fromChain] = toChainBondParams
+      hashArray[fromChain] = toChainHashArray
     }
-    watchPool(contractAddress, dTokenAddress, providers, chain, true);
+    watchPool(contractAddress, dTokenAddress, providers, fromChain, true);
   }
   return "start Maker";
 }
-function watchPool(sourceAddress, dTokenAddress, providers, chain, isSource) {
+
+function watchPool(sourceAddress, dTokenAddress, providers, fromChain, isSource) {
   // Instantiate web3 with WebSocketProvider
   let wsEndPoint = providers.wsEndPoint;
   let contractAddress = sourceAddress;
@@ -127,7 +137,7 @@ function watchPool(sourceAddress, dTokenAddress, providers, chain, isSource) {
           console.log(error);
           return;
         }
-        doDest(sourceContract, event, chain);
+        doDest(sourceContract, event, fromChain);
         return;
       })
       .on("connected", async function (subscriptionId) {
@@ -137,7 +147,7 @@ function watchPool(sourceAddress, dTokenAddress, providers, chain, isSource) {
           " time =",
           getTime(),
           "chain =",
-          chain
+          fromChain
         );
       });
 
@@ -158,7 +168,7 @@ function watchPool(sourceAddress, dTokenAddress, providers, chain, isSource) {
           " time =",
           getTime(),
           "chain =",
-          chain
+          fromChain
         );
       });
 
@@ -179,7 +189,7 @@ function watchPool(sourceAddress, dTokenAddress, providers, chain, isSource) {
           " time =",
           getTime(),
           "chain =",
-          chain
+          fromChain
         );
       });
 
@@ -213,19 +223,19 @@ async function doDest(sourceContract, value, fromChain) {
   let dest = value.returnValues.dest;
   let fee = value.returnValues.fee;
   let txindex = Number(value.returnValues.txindex);
-  let chain = value.returnValues.chainId;
+  let toChain = value.returnValues.chainId;
   let searchIndex = 0;
   let isFork = true;
   let workindex = 0;
 
-  if (hashArray[chain].indexOf(value.transactionHash) !== -1) {
+  if (hashArray[fromChain][toChain].indexOf(value.transactionHash) !== -1) {
     return;
   }
-  hashArray[chain].push(value.transactionHash);
+  hashArray[fromChain][toChain].push(value.transactionHash);
   console.log("txindex =", txindex);
   console.log("amountToSend =", amountToSend);
   console.log("dest =", dest);
-  console.log("chain =", chain);
+  console.log("toChain =", toChain);
 
   let tx = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -249,7 +259,7 @@ async function doDest(sourceContract, value, fromChain) {
     const options = {
       filter: {
         txindex: searchIndex,
-        chainId: chain,
+        chainId: toChain,
       },
       fromBlock: "0",
     };
@@ -272,7 +282,7 @@ async function doDest(sourceContract, value, fromChain) {
   }
 
   await sendTransaction.send(
-    Number(chain),
+    Number(toChain),
     Number(fromChain),
     dest,
     amountToSend,
@@ -283,12 +293,12 @@ async function doDest(sourceContract, value, fromChain) {
     isFork
   );
 
-  bondParams[chain]._transferDatas.push({
+  bondParams[fromChain][toChain]._transferDatas.push({
     destination: dest,
     amount: amountToSend,
     fee: fee,
   });
-  bondParams[chain]._committers.push(config.makerAddress);
+  bondParams[fromChain][toChain]._committers.push(config.makerAddress);
 
   try {
     let data = { bondParams, hashArray }
@@ -299,26 +309,26 @@ async function doDest(sourceContract, value, fromChain) {
 
   // When workindex == worklimit - 1, deposit current zFork
   if (workindex == workLimit - 1) {
-    if (bondParams[chain].prevForkKey === "") {
+    if (bondParams[fromChain][toChain].prevForkKey === "") {
       let currentHashOnion = ethers.constants.HashZero;
-      bondParams[chain].prevForkKey = generateForkKey(fromChain, currentHashOnion)
+      bondParams[fromChain][toChain].prevForkKey = generateForkKey(fromChain, currentHashOnion)
     }
 
-    const forkKey = generateForkKey(chain, tx);
+    const forkKey = generateForkKey(fromChain, tx);
     console.warn("tx >>>>>> ", tx);
     console.warn("forkKey >>>>>> ", forkKey);
-    console.warn("prevForkKey >>>>>>", bondParams[chain].prevForkKey)
+    console.warn("prevForkKey >>>>>>", bondParams[fromChain][toChain].prevForkKey)
 
     try {
-      await depositZFork(chain, forkKey);
+      await depositZFork(fromChain, toChain, forkKey);
 
     } catch (error) {
       console.log('depositZFork error = ', error);
 
     } finally {
-      bondParams[chain].prevForkKey = forkKey;
-      bondParams[chain]._transferDatas = [];
-      bondParams[chain]._committers = [];
+      bondParams[fromChain][toChain].prevForkKey = forkKey;
+      bondParams[fromChain][toChain]._transferDatas = [];
+      bondParams[fromChain][toChain]._committers = [];
 
       try {
         let data = { bondParams, hashArray }
@@ -330,13 +340,13 @@ async function doDest(sourceContract, value, fromChain) {
   }
 }
 
-async function depositZFork(toChainId, forkKey) {
+async function depositZFork(fromChain, toChain, forkKey) {
   // Deep copy bondParams
-  const currentBondParams = JSON.parse(JSON.stringify(bondParams[toChainId]));
-  const tokenAddress = config.tokenDic[toChainId]
-  const destAddress = config.destDic[toChainId]
+  const currentBondParams = JSON.parse(JSON.stringify(bondParams[fromChain][toChain]));
+  const tokenAddress = config.tokenDic[toChain]
+  const destAddress = config.destDic[toChain]
   const provider = new ethers.providers.JsonRpcProvider(
-    config[toChainId].httpEndPoint
+    config[toChain].httpEndPoint
   );
   const singer = new ethers.Wallet(config.privatekey, provider);
   const destContract = new ethers.Contract(
@@ -371,18 +381,18 @@ async function depositZFork(toChainId, forkKey) {
 
   const min = 5
 
-  await earlyBond(toChainId, forkKey, destContract, currentBondParams, min)
+  await earlyBond(toChain, forkKey, destContract, currentBondParams, min)
 
-  let revenueSatus = await getRevenueFlag(toChainId, min + 1)
+  let revenueSatus = await getRevenueFlag(toChain, min + 1)
   if (revenueSatus === false) {
-    await doDToken(null, toChainId, null)
+    await doDToken(null, toChain, null)
     console.log('Refresh user revenue manually succeeded');
   }
   console.log('early Bond succeeded');
 }
 
 // EarlyBond in backgroup
-async function earlyBond(toChainId, forkKey, destContract, currentBondParams, min) {
+async function earlyBond(toChain, forkKey, destContract, currentBondParams, min) {
   // Wait a minute
   await sleep(60 * 1000);
   // Invoke earlyBond every 1 minute
@@ -393,7 +403,7 @@ async function earlyBond(toChainId, forkKey, destContract, currentBondParams, mi
       console.warn("EarlyBond:::", new Date());
       await sleep(60 * 1000);
       const { hash } = await destContract.earlyBond(
-        toChainId,
+        toChain,
         currentBondParams.prevForkKey,
         forkKey,
         currentBondParams._transferDatas,
