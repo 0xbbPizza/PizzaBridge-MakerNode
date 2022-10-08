@@ -1,6 +1,6 @@
 const dotenv = require("dotenv");
 dotenv.config();
-const { addUserOrRevenue, getRevenueFlag } = require('./userRevenue')
+const { addUserOrRevenue } = require('./userRevenue')
 const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 const { saveConfig, getConfig } = require('./configSave')
 const sendTransaction = require("./sendTransaction");
@@ -387,15 +387,7 @@ async function depositZFork(fromChain, toChain, forkKey) {
     return;
   }
 
-  const min = 5
-
   await earlyBond(toChain, forkKey, destContract, currentBondParams, min)
-
-  let revenueSatus = await getRevenueFlag(toChain, min + 1)
-  if (revenueSatus === false) {
-    await doDToken(null, toChain, null)
-    console.log('Refresh user revenue manually succeeded');
-  }
   console.log('early Bond succeeded');
 }
 
