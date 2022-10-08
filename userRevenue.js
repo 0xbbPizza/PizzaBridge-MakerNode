@@ -9,7 +9,7 @@ async function addUserOrRevenue(accountOrAmount, dTokenAddress, dTokenContract, 
     try {
         if (ethers.utils.isAddress(accountOrAmount)) {
             await redisDB.sadd(KEY, accountOrAmount.toLowerCase())
-        } else if (ethers.BigNumber.isBigNumber(accountOrAmount)) {
+        } else {
             const accountList = await redisDB.smembers(KEY)
             for (let i = 0, len = accountList.length; i < len; i++) {
                 const userAddress = accountList[i]
