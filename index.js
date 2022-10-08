@@ -212,6 +212,14 @@ async function doDToken(dTokenContract, value, status) {
   }
   dTokenAddress = dTokenContract._address
   chain = Object.entries(config.dTokenDic).find((item) => item[1] === dTokenAddress)[0]
+  const provider = new ethers.providers.JsonRpcProvider(
+    config[chain].httpEndPoint
+  );
+  dTokenContract = new ethers.Contract(
+    dTokenAddress,
+    config.dTokenABI,
+    provider
+  );
   await addUserOrRevenue(accountOrAmount, dTokenAddress, dTokenContract, chain)
 }
 
