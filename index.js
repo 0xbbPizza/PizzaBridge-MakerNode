@@ -387,6 +387,7 @@ async function depositZFork(fromChain, toChain, forkKey) {
     return;
   }
 
+  const min = 5
   await earlyBond(toChain, forkKey, destContract, currentBondParams, min)
   console.log('early Bond succeeded');
 }
