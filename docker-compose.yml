@@ -6,7 +6,7 @@ services:
     expose:
       - "8080"
     depends_on:
-      - redis
+      - redis  # DAI: redis   USDC: redis2    ETH: redis3
     restart: always
     networks:
       - app-network
