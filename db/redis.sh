@@ -1,5 +1,6 @@
 #!/bin/bash
 ########## Define variables ##########
+# DAI: /usr/local/redis/redisDAI   USDC: /usr/local/redis/redisUSDC    ETH: /usr/local/redis/redisETH
 home_dir='/usr/local/redis/redisDAI'
 redis_passwd=@redisPass123456
 ############## conf files ##################
