@@ -1,30 +1,17 @@
 version: "3.8"
 services:
-  backend:
+  backend:    # DAI: backend   USDC: backend2  ETH: backend3
     build: . # Build image from local Dockerfile
     command: bash -c 'npm start'
-    ports:
-      - "3000:3000" # Expose port 3000 on  host
+    expose:
+      - "3000"
     depends_on:
       - redis
     restart: always
     networks:
       - app-network
 
-  # db:
-  #   image: mysql:5.7
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASS}"
-  #     MYSQL_DATABASE: "${DB_NAME}"
-  #     MYSQL_USER: "${DB_USER}"
-  #     MYSQL_PASSWORD: "${DB_PASS}"
-  #   expose:
-  #     - "3306"
-  #   restart: always
-  #   networks:
-  #     - app-network
-
-  redis:
+  redis:    # DAI: redis   USDC: redis2    ETH: redis3
     image: redis
     restart: always
     privileged: true
@@ -38,6 +25,20 @@ services:
       - ${REDIS_PATH}/data:/data:rw
       - ${REDIS_PATH}/conf/redis.conf:/usr/local/etc/redis/redis.conf
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:latest
+    restart: always
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - /usr/local/cert/__orbiter_finance.crt:/etc/nginx/certs/__orbiter_finance.crt
+      - ./log:/var/log/nginx
+      - /usr/local/cert/private.key:/etc/nginx/certs/private.key
+    ports:
+      - 3000:3000   # DAI: 3000   USDC: 3001    ETH: 3002
+    restart: always
     networks:
       - app-network
 
