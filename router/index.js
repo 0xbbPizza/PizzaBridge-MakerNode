@@ -10,7 +10,7 @@ const server = async () => {
         data === null ? data = ethers.BigNumber.from(0) : ethers.BigNumber.from(data)
         res.send(data)
     })
-    app.listen(3000, () => {
+    app.listen(8080, () => {
         console.log('https server running')
     })
 }
